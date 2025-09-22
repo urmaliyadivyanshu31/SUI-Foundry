@@ -1,0 +1,26 @@
+{
+  "typescript.preferences.noSemicolons": "off",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "mcp-server-supabase"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://vvybiplljyimzollfnpd.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eWJpcGxsanlpbXpvbGxmbnBkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODUzMjc5NywiZXhwIjoyMDc0MTA4Nzk3fQ.2WycmIsOE5bcMsFfTsvguT84miS4yJAQVLafpB77OaA"
+      }
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    }
+  }
+}
