@@ -1,447 +1,338 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePrivy } from '@privy-io/react-auth'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useZkLogin } from '@/lib/providers'
+import { useEffect } from 'react'
+import { ConnectButton } from '@mysten/dapp-kit'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { GitHubConnectionCard } from '@/components/ui/github-connection-card'
-import { ReputationDashboard } from '@/components/ui/reputation-dashboard'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
-import { Wallet, Users, Zap, Trophy, Github, Twitter, Linkedin, Settings, Coins } from 'lucide-react'
-import { WalletStatus, WalletBadge } from '@/components/ui/wallet-status'
-import { TransactionButton } from '@/components/ui/transaction-button'
-import { useSuiWallet } from '@/hooks/useSuiWallet'
+import { Card, CardContent } from '@/components/ui/card'
+import { Sparkles, Shield, Brain, Globe, Users, Zap } from 'lucide-react'
+import { Globe as GlobeComponent } from '@/components/ui/globe'
 
-export default function HomePage() {
+// Logo Component
+const LogoIcon = () => (
+  <div style={{
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid rgba(203, 176, 255, 0.3)'
+  }}>
+    <div style={{
+      width: '16px',
+      height: '16px',
+      background: 'linear-gradient(45deg, #ffffff 0%, #cbb0ff 100%)',
+      borderRadius: '4px',
+    }} />
+  </div>
+)
+
+export default function LandingPage() {
+  const { user, isAuthenticated, isLoading } = useZkLogin()
   const router = useRouter()
-  const { login, logout, user, authenticated, ready } = usePrivy()
-  const { profile, needsOnboarding, profileCompletion, socialConnections, isLoading, refreshProfile } = useUserProfile()
-  const { address, balance, isLoadingBalance } = useSuiWallet()
 
-  // Redirect to onboarding if needed
+  // Redirect authenticated users to profile setup
   useEffect(() => {
-    if (authenticated && profile && needsOnboarding) {
+    if (isAuthenticated && user) {
       router.push('/profile/setup')
     }
-  }, [authenticated, profile, needsOnboarding, router])
+  }, [isAuthenticated, user, router])
 
-  if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
-      </div>
-    )
-  }
-
-  if (!authenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <main className="container mx-auto px-4 py-16">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-6">
-              SuiDentity
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              AI-Powered On-Chain Identity & Reputation Platform
-            </p>
-            <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Build your Web3 reputation with AI-powered identity scoring, social verification, 
-              and dynamic NFTs on Sui blockchain. Connect your social accounts, earn reputation, 
-              and mint your digital identity.
-            </p>
-            
-            <Button 
-              onClick={login} 
-              size="lg" 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg rounded-full mb-16"
-            >
-              <Wallet className="mr-2 h-5 w-5" />
-              Connect & Build Your Identity
-            </Button>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Users className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>Social Verification</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Connect GitHub, Twitter, LinkedIn and prove ownership of your social accounts
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Zap className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>AI Reputation</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Get AI-calculated reputation scores (300-850) based on your Web3 and social activity
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Trophy className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>Dynamic NFTs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Mint identity NFTs that evolve with your reputation and achievements
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-6">Powered by Cutting-Edge Tech</h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Badge variant="secondary" className="px-4 py-2">Sui Blockchain</Badge>
-                <Badge variant="secondary" className="px-4 py-2">OpenAI GPT-4</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Walrus Storage</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Privy Auth</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Supabase</Badge>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  // Show loading state while profile loads
-  if (authenticated && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
-      </div>
-    )
-  }
-
-  // Authenticated user dashboard
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%)',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Navigation Header */}
+      <nav style={{
+        padding: '16px 24px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(10px)',
+        position: 'sticky',
+        top: '0',
+        zIndex: 50
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          {/* Left - Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <LogoIcon />
+            <span style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#ffffff'
+            }}>
               SuiDentity
-            </h1>
+            </span>
           </div>
-          <div className="flex items-center space-x-4">
-            {address && <WalletBadge />}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => router.push('/profile/setup')}
+
+          {/* Right - Connect Button */}
+          <ConnectButton 
+            style={{
+              background: 'linear-gradient(135deg, #4285f4 0%, #34a853 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          />
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '80px 24px',
+        position: 'relative'
+      }}>
+        {/* Background Effects */}
+        <div style={{
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          background: 'radial-gradient(ellipse at center top, rgba(147, 51, 234, 0.15) 0%, transparent 50%)',
+          pointerEvents: 'none'
+        }} />
+
+        {/* Content Container */}
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          width: '100%',
+          position: 'relative',
+          zIndex: 10
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+            gap: '80px',
+            alignItems: 'center'
+          }}>
+            {/* Left - Hero Content */}
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                style={{
+                  fontSize: '64px',
+                  fontWeight: '800',
+                  lineHeight: '1.1',
+                  marginBottom: '24px',
+                  background: 'linear-gradient(180deg, #ffffff 0%, #cbb0ff 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                Your Identity,
+                <br />
+                <span style={{ color: '#9333ea' }}>AI-Powered</span>
+              </motion.h1>
+
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                style={{
+                  fontSize: '20px',
+                  color: '#9ca3af',
+                  lineHeight: '1.6',
+                  marginBottom: '40px',
+                  maxWidth: '480px'
+                }}
+              >
+                Build your decentralized identity with AI-powered reputation scoring. 
+                Connect your social accounts, showcase your skills, and unlock Web3 opportunities.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                style={{ marginBottom: '48px' }}
+              >
+                <ConnectButton 
+                  style={{
+                    background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '16px 32px',
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: 'white',
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 32px rgba(147, 51, 234, 0.4)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}
+                >
+                  <Sparkles size={20} />
+                  Get Started with Google
+                </ConnectButton>
+              </motion.div>
+
+              {/* Feature Points */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                style={{
+                  display: 'flex',
+                  gap: '32px',
+                  flexWrap: 'wrap'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={16} style={{ color: '#34d399' }} />
+                  <span style={{ fontSize: '14px', color: '#d1d5db' }}>Secure zkLogin</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Brain size={16} style={{ color: '#f59e0b' }} />
+                  <span style={{ fontSize: '14px', color: '#d1d5db' }}>AI Reputation</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Globe size={16} style={{ color: '#3b82f6' }} />
+                  <span style={{ fontSize: '14px', color: '#d1d5db' }}>Web3 Native</span>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Right - Interactive Globe */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.4 }}
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '500px'
+              }}
             >
-              <Settings className="w-4 h-4 mr-2" />
-              Profile
-            </Button>
-            <Avatar>
-              <AvatarFallback>
-                {profile?.username?.[0]?.toUpperCase() || 
-                 user?.google?.name?.[0] || 
-                 user?.twitter?.name?.[0] || 
-                 user?.email?.address?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
+              <GlobeComponent />
+            </motion.div>
           </div>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">
-            Welcome, {profile?.username || user?.google?.name || user?.twitter?.name || 'Anonymous'}!
-          </h2>
-          <p className="text-muted-foreground mb-4">
-            Build your Web3 identity and reputation on Sui blockchain
-          </p>
-          
-          {/* Profile Completion Bar */}
-          <div className="bg-card p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Profile Completion</span>
-              <span className="text-sm text-muted-foreground">{profileCompletion}%</span>
-            </div>
-            <Progress value={profileCompletion} className="w-full" />
-            {profileCompletion < 100 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Complete your profile to improve your reputation score
-              </p>
-            )}
-          </div>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="wallet">Wallet</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="reputation">Reputation</TabsTrigger>
-            <TabsTrigger value="nfts">NFTs</TabsTrigger>
-            <TabsTrigger value="quests">Quests</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
-                  <Coins className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingBalance ? '...' : (balance?.sui?.toFixed(4) || '0.0000')}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    SUI on {process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reputation Score</CardTitle>
-                  <Zap className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">350</div>
-                  <p className="text-xs text-muted-foreground">
-                    +12 from last calculation
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Social Connections</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{socialConnections.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {socialConnections.length === 0 ? 'Connect accounts to build reputation' : 
-                     socialConnections.length < 3 ? 'Connect more to increase score' : 
-                     'Great social presence!'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">NFTs Minted</CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    Mint your first identity NFT
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Get started by connecting your social accounts and minting your identity NFT
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="w-full" variant="outline">
-                    <Github className="mr-2 h-4 w-4" />
-                    Connect GitHub
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    <Twitter className="mr-2 h-4 w-4" />
-                    Connect Twitter
-                  </Button>
-                </div>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  Calculate Reputation Score
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="wallet" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <WalletStatus showBalance showNetwork />
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>
-                    Manage your Sui blockchain assets
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <TransactionButton variant="default" className="w-full" />
-                  
-                  <div className="pt-4 border-t">
-                    <h4 className="text-sm font-medium mb-3">Wallet Features</h4>
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Wallet className="w-4 h-4 mr-2" />
-                        Embedded wallet powered by Privy
-                      </div>
-                      <div className="flex items-center">
-                        <Coins className="w-4 h-4 mr-2" />
-                        Ed25519 signature scheme
-                      </div>
-                      <div className="flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Auto-created on login
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction History</CardTitle>
-                <CardDescription>
-                  Your recent Sui blockchain transactions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Wallet className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions yet</p>
-                  <p className="text-sm mt-2">
-                    Send your first SUI transaction to see it here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="social" className="space-y-6">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Social Media Connections</h3>
-                <p className="text-muted-foreground">
-                  Connect your social media accounts to increase your reputation score
-                </p>
-              </div>
-
-              {/* GitHub Connection Card */}
-              <GitHubConnectionCard
-                userId={profile?.id || ''}
-                socialConnections={socialConnections}
-                onConnectionUpdate={refreshProfile}
-              />
-
-              {/* Other Social Connections */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <Twitter className="h-8 w-8" />
-                    <div>
-                      <p className="font-medium">Twitter/X</p>
-                      <p className="text-sm text-muted-foreground">
-                        {user?.twitter ? `Connected as ${user.twitter.name || 'Twitter User'}` : 'Connect your social presence'}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={user?.twitter ? "secondary" : "outline"}>
-                    {user?.twitter ? "Connected" : "Available in Privy"}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
-                  <div className="flex items-center space-x-4">
-                    <Linkedin className="h-8 w-8" />
-                    <div>
-                      <p className="font-medium">LinkedIn</p>
-                      <p className="text-sm text-muted-foreground">Coming soon in next update</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="reputation" className="space-y-6">
-            <ReputationDashboard userId={profile?.id || ''} />
-          </TabsContent>
-
-          <TabsContent value="nfts" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Identity NFTs</CardTitle>
-                <CardDescription>
-                  Dynamic NFTs that represent your Web3 identity and evolve with your reputation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-8">
-                    You haven&apos;t minted any identity NFTs yet
-                  </p>
-                  <Button className="bg-purple-600 hover:bg-purple-700">
-                    Mint Your First Identity NFT
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="quests" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quests & Achievements</CardTitle>
-                <CardDescription>
-                  Complete quests to earn XP and badges while building your reputation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">First Steps</h4>
-                    <Badge variant="secondary">50 XP</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Complete your profile setup</p>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '30%' }}></div>
-                  </div>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">Social Butterfly</h4>
-                    <Badge variant="secondary">100 XP</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Connect 3 social media accounts</p>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '33%' }}></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </main>
+
+      {/* Features Section */}
+      <section style={{
+        padding: '80px 24px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            style={{
+              fontSize: '32px',
+              fontWeight: '700',
+              textAlign: 'center',
+              marginBottom: '48px',
+              color: '#ffffff'
+            }}
+          >
+            Build Your Digital Identity
+          </motion.h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px'
+          }}>
+            {[
+              {
+                icon: Shield,
+                title: 'Secure Authentication',
+                description: 'Login with Google using Sui zkLogin technology. No seed phrases, no wallet setup.'
+              },
+              {
+                icon: Brain,
+                title: 'AI-Powered Reputation',
+                description: 'Our AI analyzes your activity to build a comprehensive reputation score.'
+              },
+              {
+                icon: Users,
+                title: 'Social Connections',
+                description: 'Connect GitHub, Twitter, and other platforms to enrich your profile.'
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.2 }}
+              >
+                <Card style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '16px'
+                }}>
+                  <CardContent style={{ padding: '32px' }}>
+                    <feature.icon size={32} style={{ 
+                      color: '#9333ea',
+                      marginBottom: '16px'
+                    }} />
+                    <h3 style={{
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      color: '#ffffff',
+                      marginBottom: '12px'
+                    }}>
+                      {feature.title}
+                    </h3>
+                    <p style={{
+                      color: '#9ca3af',
+                      lineHeight: '1.6'
+                    }}>
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{
+        padding: '24px',
+        textAlign: 'center',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        color: '#6b7280'
+      }}>
+        <p style={{ fontSize: '14px' }}>
+          Built on Sui • Powered by AI • Secured by zkLogin
+        </p>
+      </footer>
     </div>
   )
 }

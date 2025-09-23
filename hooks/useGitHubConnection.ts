@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { GitHubProfileAnalysis } from '@/lib/github'
+import type { GitHubProfileAnalysis } from '@/lib/ai/github'
 
 interface UseGitHubConnectionReturn {
   // Connection actions
@@ -108,7 +108,7 @@ export function useGitHubConnection(): UseGitHubConnectionReturn {
 
 // Helper hook for GitHub connection status
 export function useGitHubConnectionStatus(socialConnections: any[]) {
-  const githubConnection = socialConnections.find(conn => conn.platform === 'github')
+  const githubConnection = socialConnections?.find(conn => conn.platform === 'github')
   
   return {
     isConnected: !!githubConnection,

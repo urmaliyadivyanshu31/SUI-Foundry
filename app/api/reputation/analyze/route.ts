@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UserService, SocialConnectionService, ReputationService } from '@/lib/db-functions'
-import { GitHubService } from '@/lib/github'
-import { SmartReputationAI, ReputationUtils, type CompressedProfile } from '@/lib/ai-reputation'
+import { UserService, SocialConnectionService, ReputationService } from '@/lib/db/db-functions'
+import { GitHubService } from '@/lib/ai/github'
+import { SmartReputationAI, ReputationUtils, type CompressedProfile } from '@/lib/ai/ai-reputation'
 
 export async function POST(request: NextRequest) {
   try {
