@@ -110,21 +110,33 @@ export function useUserProfile(): UseUserProfileReturn {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<User>) => {
-      if (!profile?.id) throw new Error('No user profile found')
+      if (!profile?.id) {
+        throw new Error('No user profile found - please ensure you are logged in')
+      }
+      
+      console.log('🔄 Updating profile with data:', updates)
       
       const updatedUser = await UserService.updateUserProfile(profile.id, updates)
-      if (!updatedUser) throw new Error('Failed to update profile')
+      if (!updatedUser) {
+        throw new Error('Failed to update profile - database operation failed')
+      }
       
+      console.log('✅ Profile updated successfully:', updatedUser)
       return updatedUser
     },
     onSuccess: () => {
       toast.success('Profile updated successfully!')
       queryClient.invalidateQueries({ queryKey: ['userProfile'] })
     },
-    onError: (error) => {
-      console.error('Update profile error:', error)
-      toast.error('Failed to update profile')
-      setError('Failed to update profile')
+    onError: (error: any) => {
+      console.error('❌ Update profile error:', {
+        message: error.message || 'Unknown error',
+        stack: error.stack,
+        error: error
+      })
+      const errorMessage = error.message || 'Failed to update profile - please try again'
+      toast.error(errorMessage)
+      setError(errorMessage)
     }
   })
 
@@ -318,9 +330,15 @@ export function useUsernameValidator() {
       }
 
       return available
-    } catch (error) {
-      console.error('Username validation error:', error)
-      setValidationError('Error checking username availability')
+    } catch (error: any) {
+      console.error('❌ Username validation error:', {
+        message: error.message || 'Unknown validation error',
+        stack: error.stack,
+        username: username,
+        excludeUserId: excludeUserId,
+        error: error
+      })
+      setValidationError('Error checking username availability - please try again')
       setIsAvailable(false)
       return false
     } finally {

@@ -26,10 +26,11 @@ export class UserService {
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('❌ Error fetching user:', {
-          message: fetchError.message,
-          code: fetchError.code,
-          details: fetchError.details,
-          hint: fetchError.hint
+          message: fetchError.message || 'Unknown database error',
+          code: fetchError.code || 'NO_CODE',
+          details: fetchError.details || 'No details available',
+          hint: fetchError.hint || 'No hint available',
+          fullError: fetchError
         })
         return null
       }
@@ -48,7 +49,13 @@ export class UserService {
           .single()
 
         if (updateError) {
-          console.error('Error updating user:', updateError)
+          console.error('❌ Error updating existing user:', {
+            message: updateError.message || 'Unknown update error',
+            code: updateError.code || 'NO_CODE',
+            details: updateError.details || 'No details available',
+            hint: updateError.hint || 'No hint available',
+            fullError: updateError
+          })
           return null
         }
 
@@ -67,14 +74,26 @@ export class UserService {
           .single()
 
         if (createError) {
-          console.error('Error creating user:', createError)
+          console.error('❌ Error creating new user:', {
+            message: createError.message || 'Unknown create error',
+            code: createError.code || 'NO_CODE',
+            details: createError.details || 'No details available',
+            hint: createError.hint || 'No hint available',
+            insertData: insertData,
+            fullError: createError
+          })
           return null
         }
 
         return newUser
       }
-    } catch (error) {
-      console.error('Error in createOrUpdateUser:', error)
+    } catch (error: any) {
+      console.error('❌ Unexpected error in createOrUpdateUser:', {
+        message: error.message || 'Unknown error',
+        stack: error.stack,
+        privyUserId: privyUser?.id,
+        error: error
+      })
       return null
     }
   }
@@ -102,13 +121,25 @@ export class UserService {
         .single()
 
       if (userError) {
-        console.error('Error fetching user profile:', userError)
+        console.error('❌ Error fetching user profile:', {
+          message: userError.message || 'Unknown profile fetch error',
+          code: userError.code || 'NO_CODE',
+          details: userError.details || 'No details available',
+          hint: userError.hint || 'No hint available',
+          userId: userId,
+          fullError: userError
+        })
         return null
       }
 
       return user as UserProfile
-    } catch (error) {
-      console.error('Error in getUserProfile:', error)
+    } catch (error: any) {
+      console.error('❌ Unexpected error in getUserProfile:', {
+        message: error.message || 'Unknown error',
+        stack: error.stack,
+        userId: userId,
+        error: error
+      })
       return null
     }
   }
@@ -128,13 +159,27 @@ export class UserService {
         .single()
 
       if (error) {
-        console.error('Error updating user profile:', error)
+        console.error('❌ Error updating user profile:', {
+          message: error.message || 'Unknown profile update error',
+          code: error.code || 'NO_CODE',
+          details: error.details || 'No details available',
+          hint: error.hint || 'No hint available',
+          userId: userId,
+          updateData: updateData,
+          fullError: error
+        })
         return null
       }
 
       return updatedUser
-    } catch (error) {
-      console.error('Error in updateUserProfile:', error)
+    } catch (error: any) {
+      console.error('❌ Unexpected error in updateUserProfile:', {
+        message: error.message || 'Unknown error',
+        stack: error.stack,
+        userId: userId,
+        updates: updates,
+        error: error
+      })
       return null
     }
   }
@@ -161,10 +206,13 @@ export class UserService {
 
       if (error) {
         console.error('❌ Error checking username availability:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint
+          message: error.message || 'Unknown username check error',
+          code: error.code || 'NO_CODE',
+          details: error.details || 'No details available',
+          hint: error.hint || 'No hint available',
+          username: username,
+          excludeUserId: excludeUserId,
+          fullError: error
         })
         // Fallback: Allow valid usernames if DB query fails
         return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username)
@@ -337,13 +385,25 @@ export class SocialConnectionService {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error('Error fetching social connections:', error)
+        console.error('❌ Error fetching social connections:', {
+          message: error.message || 'Unknown social connections error',
+          code: error.code || 'NO_CODE',
+          details: error.details || 'No details available',
+          hint: error.hint || 'No hint available',
+          userId: userId,
+          fullError: error
+        })
         return []
       }
 
       return connections
-    } catch (error) {
-      console.error('Error in getUserSocialConnections:', error)
+    } catch (error: any) {
+      console.error('❌ Unexpected error in getUserSocialConnections:', {
+        message: error.message || 'Unknown error',
+        stack: error.stack,
+        userId: userId,
+        error: error
+      })
       return []
     }
   }
