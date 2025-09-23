@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "db:test": "node scripts/test-db-connection.js",
-    "setup:check": "npm run db:test"
+    "setup:check": "npm run db:test",
+    "ai:test": "npx tsx ai-enhancements/examples/advanced-prompts.ts",
+    "ai:benchmark": "npx tsx ai-enhancements/examples/ai-benchmark.ts",
+    "ai:multi-modal": "npx tsx ai-enhancements/examples/multi-modal-ai.ts"
   },
   "dependencies": {
     "@magicuidesign/mcp": "^1.0.6",
