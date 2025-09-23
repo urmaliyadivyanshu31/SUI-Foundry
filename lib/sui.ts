@@ -131,7 +131,7 @@ export class IdentityNFT {
   }
 }
 
-// Tipping utilities (commented out for now due to API changes)
+// Tipping utilities with proper Sui Transaction implementation
 export class TippingUtils {
   static async sendTip(
     fromAddress: string,
@@ -140,21 +140,69 @@ export class TippingUtils {
     message?: string
   ) {
     try {
-      // TODO: Implement proper Sui Transaction API
-      console.log('Sending tip:', {
+      if (!this.validateSuiAddress(fromAddress) || !this.validateSuiAddress(toAddress)) {
+        throw new Error('Invalid Sui address format')
+      }
+
+      if (amount <= 0) {
+        throw new Error('Amount must be greater than 0')
+      }
+
+      // Convert SUI to MIST (1 SUI = 1_000_000_000 MIST)
+      const amountInMist = Math.floor(amount * 1_000_000_000)
+
+      // Create transaction block
+      const tx = new Transaction()
+      
+      // Split coin for the exact amount if needed
+      const [coin] = tx.splitCoins(tx.gas, [amountInMist])
+      
+      // Transfer the coin to recipient
+      tx.transferObjects([coin], toAddress)
+      
+      // Add sender address for gas payment
+      tx.setSender(fromAddress)
+
+      console.log('✅ Transaction prepared:', {
         from: fromAddress,
         to: toAddress,
-        amount: amount * 1000000000, // Convert to MIST
+        amount: amount,
+        amountInMist,
         message
       })
       
-      // Return mock transaction hash for now
+      // Return transaction for signing and execution
       return {
-        transactionHash: `0x${Math.random().toString(16).slice(2)}`,
-        success: true
+        transaction: tx,
+        success: true,
+        amountInMist,
+        message
       }
     } catch (error: any) {
-      console.error('Error sending tip:', error)
+      console.error('❌ Error preparing tip transaction:', error)
+      return {
+        transaction: null,
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  static async executeTipTransaction(
+    transaction: Transaction,
+    signAndExecute: (tx: Transaction) => Promise<any>
+  ) {
+    try {
+      const result = await signAndExecute(transaction)
+      
+      return {
+        transactionHash: result.digest,
+        success: true,
+        effects: result.effects,
+        events: result.events
+      }
+    } catch (error: any) {
+      console.error('❌ Error executing tip transaction:', error)
       return {
         transactionHash: null,
         success: false,

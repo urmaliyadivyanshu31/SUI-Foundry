@@ -108,7 +108,7 @@ export function useGitHubConnection(): UseGitHubConnectionReturn {
 
 // Helper hook for GitHub connection status
 export function useGitHubConnectionStatus(socialConnections: any[]) {
-  const githubConnection = socialConnections.find(conn => conn.platform === 'github')
+  const githubConnection = socialConnections?.find(conn => conn.platform === 'github')
   
   return {
     isConnected: !!githubConnection,

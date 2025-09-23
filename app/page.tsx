@@ -4,18 +4,56 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePrivy } from '@privy-io/react-auth'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { GitHubConnectionCard } from '@/components/ui/github-connection-card'
 import { ReputationDashboard } from '@/components/ui/reputation-dashboard'
+import { NFTMintingCard, NFTMintingDialog } from '@/components/ui/nft-minting'
+import { NFTDisplay, NFTSummary } from '@/components/ui/nft-display'
+import { QuestSystem, QuestProgress } from '@/components/ui/quest-system'
+import { Achievements, AchievementsSummary } from '@/components/ui/achievements'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
-import { Wallet, Users, Zap, Trophy, Github, Twitter, Linkedin, Settings, Coins } from 'lucide-react'
+import { Wallet, Users, Zap, Trophy, Github, Twitter, Linkedin, Settings, Coins, Shield, Network, Globe as GlobeIcon, Brain, Sparkles } from 'lucide-react'
 import { WalletStatus, WalletBadge } from '@/components/ui/wallet-status'
 import { TransactionButton } from '@/components/ui/transaction-button'
 import { useSuiWallet } from '@/hooks/useSuiWallet'
+import { CustomLoader } from '@/components/ui/custom-loader'
+import { Globe } from '@/components/ui/globe'
+
+// Custom Logo Component
+const LogoIcon = () => (
+  <div style={{
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid rgba(203, 176, 255, 0.3)'
+  }}>
+    <div style={{
+      width: '16px',
+      height: '16px',
+      background: 'linear-gradient(45deg, #ffffff 0%, #cbb0ff 100%)',
+      borderRadius: '4px',
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '2px',
+        left: '2px',
+        width: '12px',
+        height: '12px',
+        border: '2px solid rgba(255, 255, 255, 0.8)',
+        borderRadius: '2px'
+      }} />
+    </div>
+  </div>
+)
 
 export default function HomePage() {
   const router = useRouter()
@@ -32,416 +70,589 @@ export default function HomePage() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CustomLoader size={40} color="#cbb0ff" />
       </div>
     )
   }
 
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <main className="container mx-auto px-4 py-16">
-          <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-6">
-              SuiDentity
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              AI-Powered On-Chain Identity & Reputation Platform
-            </p>
-            <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Build your Web3 reputation with AI-powered identity scoring, social verification, 
-              and dynamic NFTs on Sui blockchain. Connect your social accounts, earn reputation, 
-              and mint your digital identity.
-            </p>
-            
-            <Button 
-              onClick={login} 
-              size="lg" 
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg rounded-full mb-16"
-            >
-              <Wallet className="mr-2 h-5 w-5" />
-              Connect & Build Your Identity
-            </Button>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Users className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>Social Verification</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Connect GitHub, Twitter, LinkedIn and prove ownership of your social accounts
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Zap className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>AI Reputation</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Get AI-calculated reputation scores (300-850) based on your Web3 and social activity
-                  </CardDescription>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-200 dark:border-purple-800">
-                <CardHeader>
-                  <Trophy className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <CardTitle>Dynamic NFTs</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>
-                    Mint identity NFTs that evolve with your reputation and achievements
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-6">Powered by Cutting-Edge Tech</h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Badge variant="secondary" className="px-4 py-2">Sui Blockchain</Badge>
-                <Badge variant="secondary" className="px-4 py-2">OpenAI GPT-4</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Walrus Storage</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Privy Auth</Badge>
-                <Badge variant="secondary" className="px-4 py-2">Supabase</Badge>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', color: 'white', position: 'relative' }}>
+        {/* Floating Navigation Bar */}
+        <nav style={{
+          position: 'fixed',
+          top: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          width: '100%',
+          maxWidth: '1200px',
+          padding: '0 24px'
+        }}>
+          <div style={{
+            backgroundColor: 'rgba(20, 20, 24, 0.8)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(203, 176, 255, 0.1)',
+            borderRadius: '16px',
+            padding: '12px 24px',
+            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              {/* Left - Logo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <LogoIcon />
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #cbb0ff 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>SuiDentity</span>
+              </div>
+              
+              {/* Center - Navigation Links */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <a 
+                  href="#" 
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ffffff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#9ca3af'
+                  }}
+                >
+                  WHY SUIDENTITY
+                </a>
+                <span style={{ color: '#4b5563', fontSize: '10px' }}>·</span>
+                <a 
+                  href="#" 
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ffffff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#9ca3af'
+                  }}
+                >
+                  HOW IT WORKS
+                </a>
+                <span style={{ color: '#4b5563', fontSize: '10px' }}>·</span>
+                <a 
+                  href="#" 
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ffffff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#9ca3af'
+                  }}
+                >
+                  USE CASES
+                </a>
+                <span style={{ color: '#4b5563', fontSize: '10px' }}>·</span>
+                <a 
+                  href="#" 
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    padding: '8px 12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#ffffff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#9ca3af'
+                  }}
+                >
+                  BUILD
+                </a>
+              </div>
+              
+              {/* Right - CTA Button */}
+              <div>
+                <button 
+                  onClick={login}
+                  style={{
+                    background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
+                    color: 'white',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: '600',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 0 20px rgba(203, 176, 255, 0.3)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 4px 30px rgba(203, 176, 255, 0.5)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(203, 176, 255, 0.3)'
+                  }}
+                >
+                  GET STARTED →
+                </button>
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    )
-  }
-
-  // Show loading state while profile loads
-  if (authenticated && isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+        </nav>
+        
+        {/* Hero Section with Globe */}
+        <div style={{ 
+          paddingTop: '120px',
+          position: 'relative',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden'
+        }}>
+          {/* Background gradient */}
+          <div style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
+            background: 'radial-gradient(ellipse at center top, rgba(147, 51, 234, 0.15) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }} />
+          
+          {/* Content Container */}
+          <div style={{
+            maxWidth: '1200px',
+            width: '100%',
+            padding: '0 24px',
+            position: 'relative',
+            zIndex: 10
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '60px',
+              alignItems: 'center'
+            }}>
+              {/* Left - Text Content */}
+              <div>
+                <h1 style={{
+                  fontSize: '56px',
+                  fontWeight: '700',
+                  lineHeight: '1.1',
+                  marginBottom: '24px',
+                  background: 'linear-gradient(180deg, #ffffff 0%, #cbb0ff 100%)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  UNIVERSAL
+                  <br />
+                  IDENTITY LAYER
+                  <br />
+                  FOR WEB3
+                </h1>
+                
+                <p style={{
+                  fontSize: '18px',
+                  color: '#9ca3af',
+                  lineHeight: '1.6',
+                  marginBottom: '32px',
+                  maxWidth: '480px'
+                }}>
+                  Build your decentralized identity with AI-powered reputation scoring. 
+                  Connect social accounts, mint dynamic NFTs, and unlock the future of Web3 identity.
+                </p>
+                
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <button 
+                    onClick={login}
+                    style={{
+                      background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 24px rgba(203, 176, 255, 0.4)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(203, 176, 255, 0.6)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 4px 24px rgba(203, 176, 255, 0.4)'
+                    }}
+                  >
+                    Launch App →
+                  </button>
+                  
+                  <button 
+                    style={{
+                      background: 'transparent',
+                      color: '#cbb0ff',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      padding: '14px 28px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(203, 176, 255, 0.3)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.6)'
+                      e.currentTarget.style.background = 'rgba(203, 176, 255, 0.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.3)'
+                      e.currentTarget.style.background = 'transparent'
+                    }}
+                  >
+                    Documentation
+                  </button>
+                </div>
+                
+                {/* Stats */}
+                <div style={{
+                  display: 'flex',
+                  gap: '40px',
+                  marginTop: '48px',
+                  paddingTop: '48px',
+                  borderTop: '1px solid rgba(203, 176, 255, 0.1)'
+                }}>
+                  <div>
+                    <div style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      color: '#cbb0ff',
+                      marginBottom: '4px'
+                    }}>10K+</div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>Active Users</div>
+                  </div>
+                  <div>
+                    <div style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      color: '#cbb0ff',
+                      marginBottom: '4px'
+                    }}>50M+</div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>Transactions</div>
+                  </div>
+                  <div>
+                    <div style={{
+                      fontSize: '28px',
+                      fontWeight: '700',
+                      color: '#cbb0ff',
+                      marginBottom: '4px'
+                    }}>100+</div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>Integrations</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right - Globe */}
+              <div style={{ position: 'relative' }}>
+                <Globe />
+                {/* Glow effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '600px',
+                  height: '600px',
+                  background: 'radial-gradient(circle, rgba(203, 176, 255, 0.2) 0%, transparent 70%)',
+                  pointerEvents: 'none',
+                  zIndex: -1
+                }} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
   // Authenticated user dashboard
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <CustomLoader size={40} color="#3b82f6" />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-              SuiDentity
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            {address && <WalletBadge />}
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => router.push('/profile/setup')}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Profile
-            </Button>
-            <Avatar>
-              <AvatarFallback>
-                {profile?.username?.[0]?.toUpperCase() || 
-                 user?.google?.name?.[0] || 
-                 user?.twitter?.name?.[0] || 
-                 user?.email?.address?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <Button variant="outline" onClick={logout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">
-            Welcome, {profile?.username || user?.google?.name || user?.twitter?.name || 'Anonymous'}!
-          </h2>
-          <p className="text-muted-foreground mb-4">
-            Build your Web3 identity and reputation on Sui blockchain
-          </p>
-          
-          {/* Profile Completion Bar */}
-          <div className="bg-card p-4 rounded-lg border">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Profile Completion</span>
-              <span className="text-sm text-muted-foreground">{profileCompletion}%</span>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Top Navigation */}
+      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <Wallet className="h-8 w-8 text-blue-400" />
+              <h1 className="text-xl font-bold">SuiDentity</h1>
             </div>
-            <Progress value={profileCompletion} className="w-full" />
-            {profileCompletion < 100 && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Complete your profile to improve your reputation score
-              </p>
-            )}
+            
+            <div className="flex items-center space-x-4">
+              <WalletBadge />
+              <div className="flex items-center space-x-2 bg-gray-700 px-3 py-2 rounded-lg">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-blue-600 text-white text-sm">
+                    {user?.email?.substring(0, 2).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium">{profile?.username || 'User'}</span>
+              </div>
+              
+              <Button 
+                onClick={logout}
+                variant="outline"
+                size="sm"
+                className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </div>
           </div>
         </div>
+      </nav>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Profile Completion Banner */}
+        {profileCompletion < 100 && (
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Complete Your Profile
+                </h3>
+                <p className="text-blue-100">
+                  {profileCompletion}% complete - Add more connections to improve your reputation score
+                </p>
+              </div>
+              <Button 
+                onClick={() => router.push('/profile/setup')}
+                className="bg-white text-blue-600 hover:bg-gray-100"
+              >
+                Continue Setup
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-400">Reputation Score</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {profile?.reputation_score || 0}
+              </div>
+              <p className="text-xs text-gray-400">Credit score style (300-850)</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-400">Connected Accounts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {socialConnections?.length || 0}
+              </div>
+              <p className="text-xs text-gray-400">Social platforms</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-400">SUI Balance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {isLoadingBalance ? (
+                  <CustomLoader size={20} color="#3b82f6" />
+                ) : (
+                  `${balance?.toFixed(4) || '0'} SUI`
+                )}
+              </div>
+              <p className="text-xs text-gray-400">Wallet balance</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-gray-400">NFTs Owned</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">0</div>
+              <p className="text-xs text-gray-400">Identity NFTs</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Dashboard Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="wallet">Wallet</TabsTrigger>
-            <TabsTrigger value="social">Social</TabsTrigger>
-            <TabsTrigger value="reputation">Reputation</TabsTrigger>
-            <TabsTrigger value="nfts">NFTs</TabsTrigger>
-            <TabsTrigger value="quests">Quests</TabsTrigger>
+          <TabsList className="bg-gray-800 border-gray-700">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-gray-700">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="reputation" className="data-[state=active]:bg-gray-700">
+              Reputation
+            </TabsTrigger>
+            <TabsTrigger value="nfts" className="data-[state=active]:bg-gray-700">
+              Identity NFTs
+            </TabsTrigger>
+            <TabsTrigger value="quests" className="data-[state=active]:bg-gray-700">
+              Quests
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="data-[state=active]:bg-gray-700">
+              Achievements
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Wallet Balance</CardTitle>
-                  <Coins className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {isLoadingBalance ? '...' : (balance?.sui?.toFixed(4) || '0.0000')}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    SUI on {process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Reputation Score</CardTitle>
-                  <Zap className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">350</div>
-                  <p className="text-xs text-muted-foreground">
-                    +12 from last calculation
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Social Connections</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{socialConnections.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {socialConnections.length === 0 ? 'Connect accounts to build reputation' : 
-                     socialConnections.length < 3 ? 'Connect more to increase score' : 
-                     'Great social presence!'}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">NFTs Minted</CardTitle>
-                  <Trophy className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    Mint your first identity NFT
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Get started by connecting your social accounts and minting your identity NFT
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="w-full" variant="outline">
-                    <Github className="mr-2 h-4 w-4" />
-                    Connect GitHub
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    <Twitter className="mr-2 h-4 w-4" />
-                    Connect Twitter
-                  </Button>
-                </div>
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  Calculate Reputation Score
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="wallet" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <WalletStatus showBalance showNetwork />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* GitHub Connection */}
+              <GitHubConnectionCard 
+                onConnect={refreshProfile}
+                isConnected={socialConnections?.some(conn => conn.platform === 'github')}
+              />
               
-              <Card>
+              {/* Quick Actions */}
+              <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>
-                    Manage your Sui blockchain assets
+                  <CardTitle className="text-white">Quick Actions</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Get started with essential tasks
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <TransactionButton variant="default" className="w-full" />
+                  <Button 
+                    onClick={() => router.push('/profile/setup')}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Connect Social Accounts
+                  </Button>
                   
-                  <div className="pt-4 border-t">
-                    <h4 className="text-sm font-medium mb-3">Wallet Features</h4>
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Wallet className="w-4 h-4 mr-2" />
-                        Embedded wallet powered by Privy
-                      </div>
-                      <div className="flex items-center">
-                        <Coins className="w-4 h-4 mr-2" />
-                        Ed25519 signature scheme
-                      </div>
-                      <div className="flex items-center">
-                        <Zap className="w-4 h-4 mr-2" />
-                        Auto-created on login
-                      </div>
-                    </div>
-                  </div>
+                  <NFTMintingDialog>
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Mint Identity NFT
+                    </Button>
+                  </NFTMintingDialog>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Achievements
+                  </Button>
                 </CardContent>
               </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction History</CardTitle>
-                <CardDescription>
-                  Your recent Sui blockchain transactions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Wallet className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No transactions yet</p>
-                  <p className="text-sm mt-2">
-                    Send your first SUI transaction to see it here
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="social" className="space-y-6">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">Social Media Connections</h3>
-                <p className="text-muted-foreground">
-                  Connect your social media accounts to increase your reputation score
-                </p>
-              </div>
-
-              {/* GitHub Connection Card */}
-              <GitHubConnectionCard
-                userId={profile?.id || ''}
-                socialConnections={socialConnections}
-                onConnectionUpdate={refreshProfile}
-              />
-
-              {/* Other Social Connections */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <Twitter className="h-8 w-8" />
-                    <div>
-                      <p className="font-medium">Twitter/X</p>
-                      <p className="text-sm text-muted-foreground">
-                        {user?.twitter ? `Connected as ${user.twitter.name || 'Twitter User'}` : 'Connect your social presence'}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={user?.twitter ? "secondary" : "outline"}>
-                    {user?.twitter ? "Connected" : "Available in Privy"}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
-                  <div className="flex items-center space-x-4">
-                    <Linkedin className="h-8 w-8" />
-                    <div>
-                      <p className="font-medium">LinkedIn</p>
-                      <p className="text-sm text-muted-foreground">Coming soon in next update</p>
-                    </div>
-                  </div>
-                  <Badge variant="outline">Coming Soon</Badge>
-                </div>
-              </div>
+            {/* Recent Activity & Achievements Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <QuestProgress />
+              <AchievementsSummary />
             </div>
           </TabsContent>
 
-          <TabsContent value="reputation" className="space-y-6">
-            <ReputationDashboard userId={profile?.id || ''} />
+          <TabsContent value="reputation">
+            <ReputationDashboard />
           </TabsContent>
 
           <TabsContent value="nfts" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Identity NFTs</CardTitle>
-                <CardDescription>
-                  Dynamic NFTs that represent your Web3 identity and evolve with your reputation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Trophy className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-8">
-                    You haven&apos;t minted any identity NFTs yet
-                  </p>
-                  <Button className="bg-purple-600 hover:bg-purple-700">
-                    Mint Your First Identity NFT
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <NFTMintingCard />
+              <NFTSummary />
+            </div>
+            <NFTDisplay />
           </TabsContent>
 
-          <TabsContent value="quests" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quests & Achievements</CardTitle>
-                <CardDescription>
-                  Complete quests to earn XP and badges while building your reputation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">First Steps</h4>
-                    <Badge variant="secondary">50 XP</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Complete your profile setup</p>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '30%' }}></div>
-                  </div>
-                </div>
+          <TabsContent value="quests">
+            <QuestSystem />
+          </TabsContent>
 
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">Social Butterfly</h4>
-                    <Badge variant="secondary">100 XP</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">Connect 3 social media accounts</p>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '33%' }}></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="achievements">
+            <Achievements />
           </TabsContent>
         </Tabs>
-      </main>
+      </div>
     </div>
   )
 }

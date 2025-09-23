@@ -1,9 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 import { createBrowserClient, createServerClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Validate environment variables
+if (!supabaseUrl) {
+  console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+}
+if (!supabaseAnonKey) {
+  console.error('❌ Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
+}
+if (!supabaseServiceKey) {
+  console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
+}
+
+// Use defaults for development if missing
+const defaultUrl = supabaseUrl || 'https://placeholder.supabase.co'
+const defaultAnonKey = supabaseAnonKey || 'placeholder-anon-key'
+const defaultServiceKey = supabaseServiceKey || 'placeholder-service-key'
 
 export type Database = {
   public: {
@@ -289,15 +305,15 @@ export type Database = {
 }
 
 // Client-side Supabase client
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient<Database>(defaultUrl, defaultAnonKey)
 
 // Server-side Supabase client for API routes
 export const createServerSupabaseClient = async () => {
   const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
   return createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
+    defaultUrl,
+    defaultAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -309,7 +325,7 @@ export const createServerSupabaseClient = async () => {
 }
 
 // Admin client with service role key
-export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+export const supabaseAdmin = createClient<Database>(defaultUrl, defaultServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -318,5 +334,10 @@ export const supabaseAdmin = createClient<Database>(supabaseUrl, supabaseService
 
 // Client component helper
 export const createClientSupabaseClient = () => {
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient<Database>(defaultUrl, defaultAnonKey)
+}
+
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = (): boolean => {
+  return !!(supabaseUrl && supabaseAnonKey && supabaseServiceKey)
 }

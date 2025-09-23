@@ -100,7 +100,51 @@ npm run dev         # Start development server
 npm run build       # Build for production
 npm run lint        # ESLint checking
 npm run type-check  # TypeScript checking
+npm run db:test     # Test database connection
+npm run setup:check # Check complete setup status
 ```
+
+## Quick Setup Guide
+
+1. **Environment Setup:**
+   ```bash
+   cp .env.local.example .env.local
+   # Edit .env.local with your actual values
+   ```
+
+2. **Database Setup:**
+   - Create Supabase project
+   - Run the SQL migration: `supabase/migrations/001_initial_schema.sql`
+   - Test connection: `npm run db:test`
+
+3. **Development:**
+   ```bash
+   npm run dev
+   ```
+
+## Setup Status Check
+
+The app now provides clear error messages for setup issues:
+- ✅ Hydration mismatches fixed
+- ✅ SVG DOM properties corrected  
+- ✅ Database connection errors improved
+- ✅ Environment variable validation added
+- ✅ Database status checker implemented
+- ✅ Sui transaction signing implementation completed
+- ✅ Move smart contracts created (Identity NFTs + Quest System)
+
+## Smart Contract Deployment
+
+Deploy the contracts to Sui testnet:
+```bash
+cd contracts
+./scripts/deploy.sh testnet
+```
+
+The deployment script will:
+- Build and deploy the Move contracts
+- Update environment variables
+- Save deployment info to `deployments/` directory
 
 ## Project Structure
 ```

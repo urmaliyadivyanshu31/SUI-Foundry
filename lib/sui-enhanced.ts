@@ -144,11 +144,11 @@ export class SuiQueryUtils {
       const stakes = await this.client.getStakes({ owner: address })
       
       const totalStaked = stakes.reduce((sum, stake) => {
-        return sum + (parseInt(stake.principal) / MIST_PER_SUI)
+        return sum + (parseInt((stake as any).principal || '0') / MIST_PER_SUI)
       }, 0)
       
       const rewards = stakes.reduce((sum, stake) => {
-        const estimatedReward = parseInt(stake.estimatedReward || '0')
+        const estimatedReward = parseInt((stake as any).estimatedReward || '0')
         return sum + (estimatedReward / MIST_PER_SUI)
       }, 0)
       
@@ -157,11 +157,11 @@ export class SuiQueryUtils {
         estimatedRewards: rewards,
         activeStakes: stakes.length,
         stakes: stakes.map(stake => ({
-          validatorAddress: stake.validatorAddress,
-          principal: parseInt(stake.principal) / MIST_PER_SUI,
-          estimatedReward: parseInt(stake.estimatedReward || '0') / MIST_PER_SUI,
-          stakeActiveEpoch: stake.stakeActiveEpoch,
-          stakeRequestEpoch: stake.stakeRequestEpoch
+          validatorAddress: (stake as any).validatorAddress,
+          principal: parseInt((stake as any).principal || '0') / MIST_PER_SUI,
+          estimatedReward: parseInt((stake as any).estimatedReward || '0') / MIST_PER_SUI,
+          stakeActiveEpoch: (stake as any).stakeActiveEpoch,
+          stakeRequestEpoch: (stake as any).stakeRequestEpoch
         }))
       }
     } catch (error) {
