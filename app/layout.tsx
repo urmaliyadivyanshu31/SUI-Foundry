@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "@/lib/providers";
+import Providers from "@/lib/providers";
 
 // Fonts are loaded via CSS @import to avoid hydration issues
 

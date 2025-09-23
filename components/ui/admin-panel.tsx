@@ -25,9 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useSuiWallet } from '@/hooks/useSuiWallet'
-import { suiDentityContracts } from '@/lib/smart-contracts'
+import { suiDentityContracts } from '@/lib/blockchain/smart-contracts'
 import { useErrorHandler } from '@/components/error-boundary'
-import { AppError, BlockchainError, ValidationError } from '@/lib/error-handler'
+import { AppError, BlockchainError, ValidationError } from '@/lib/core/error-handler'
 import { 
   Shield, 
   Gift, 

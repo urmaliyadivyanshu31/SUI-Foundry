@@ -257,7 +257,7 @@ export function SetupStatus() {
                 {getStatusIcon(status.configuration.supabase_configured)}
               </div>
               <div className="flex items-center justify-between p-3 bg-muted rounded">
-                <span className="text-sm">Privy Authentication</span>
+                <span className="text-sm">zkLogin Authentication</span>
                 {getStatusIcon(status.configuration.privy_configured)}
               </div>
             </div>

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withErrorHandler, ValidationError, AuthenticationError, BlockchainError } from '@/lib/error-handler'
-import { mintNFTRequestSchema, updateReputationRequestSchema } from '@/lib/validation'
-import { createNFTAdapter, checkBackendCompatibility } from '@/lib/nft-backend-adapter'
-import { DatabaseManager } from '@/lib/db-functions'
-import { getUserFromRequest } from '@/lib/auth-helpers'
+import { withErrorHandler, ValidationError, AuthenticationError, BlockchainError } from '@/lib/core/error-handler'
+import { mintNFTRequestSchema, updateReputationRequestSchema } from '@/lib/core/validation'
+import { createNFTAdapter, checkBackendCompatibility } from '@/lib/blockchain/nft-backend-adapter'
+import { DatabaseManager } from '@/lib/db/db-functions'
+import { getUserFromRequest } from '@/lib/auth/auth-helpers'
 
 // GET /api/nft - Get user's NFTs
 export const GET = withErrorHandler(async (req: NextRequest) => {

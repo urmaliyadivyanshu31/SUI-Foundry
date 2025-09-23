@@ -7,6 +7,14 @@ export interface User {
   email?: string
   created_at: string
   updated_at: string
+  // zkLogin fields
+  zklogin_sub?: string
+  oauth_provider?: 'google' | 'github' | 'twitter'
+  salt_value?: string
+  max_epoch?: number
+  ephemeral_public_key?: string
+  jwt_token?: string
+  profile_picture?: string
 }
 
 export interface SocialConnection {
@@ -260,6 +268,123 @@ export interface PlatformStats {
   completed_quests: number
   active_badges: number
   total_social_connections: number
+}
+
+// zkLogin specific types
+export interface ZkLoginSession {
+  id: string
+  user_id: string
+  session_token: string
+  ephemeral_private_key_encrypted: string
+  max_epoch: number
+  created_at: string
+  expires_at: string
+  last_used: string
+  is_active: boolean
+}
+
+export interface OAuthProviderData {
+  id: string
+  user_id: string
+  provider: 'google' | 'github' | 'twitter'
+  provider_user_id: string
+  access_token_encrypted?: string
+  refresh_token_encrypted?: string
+  scope?: string
+  token_expires_at?: string
+  provider_data?: any
+  created_at: string
+  updated_at: string
+}
+
+export interface WalletTransaction {
+  id: string
+  user_id: string
+  transaction_digest: string
+  transaction_type: 'sent' | 'received' | 'contract_call' | 'nft_mint' | 'swap' | 'stake' | 'unstake'
+  amount?: number
+  token_type: string
+  from_address?: string
+  to_address?: string
+  gas_used?: number
+  gas_price?: number
+  status: 'success' | 'failed' | 'pending'
+  block_number?: number
+  timestamp_ms: number
+  sui_timestamp?: string
+  events?: any
+  raw_data?: any
+  indexed_at: string
+}
+
+export interface UserNFT {
+  id: string
+  user_id: string
+  object_id: string
+  collection_name?: string
+  nft_name?: string
+  description?: string
+  image_url?: string
+  creator_address?: string
+  owner_address: string
+  nft_type?: string
+  attributes?: any
+  rarity_score?: number
+  floor_price?: number
+  last_sale_price?: number
+  acquired_at?: string
+  last_updated: string
+  is_owned: boolean
+}
+
+export interface DeFiInteraction {
+  id: string
+  user_id: string
+  protocol_name: string
+  protocol_address: string
+  interaction_type: 'swap' | 'liquidity_add' | 'liquidity_remove' | 'stake' | 'unstake' | 'farm' | 'claim'
+  transaction_digest: string
+  input_tokens?: any[]
+  output_tokens?: any[]
+  pool_address?: string
+  fees_paid?: number
+  volume_usd?: number
+  timestamp_ms: number
+  sui_timestamp?: string
+  indexed_at: string
+}
+
+export interface WalletBalance {
+  id: string
+  user_id: string
+  wallet_address: string
+  token_type: string
+  token_symbol: string
+  balance: number
+  balance_usd?: number
+  last_updated: string
+}
+
+// Enhanced blockchain data types
+export interface EnhancedBlockchainData extends BlockchainData {
+  realTimeBalance?: WalletBalance[]
+  transactionHistory?: WalletTransaction[]
+  nftCollection?: UserNFT[]
+  defiActivity?: DeFiInteraction[]
+  totalTransactions?: number
+  totalVolume?: number
+  totalNFTs?: number
+  defiProtocolsCount?: number
+  reputationScore?: number
+}
+
+// Real-time data fetching types
+export interface BlockchainDataFetcher {
+  getUserBalance(address: string): Promise<WalletBalance[]>
+  getUserTransactions(address: string, limit?: number): Promise<WalletTransaction[]>
+  getUserNFTs(address: string): Promise<UserNFT[]>
+  getUserDeFiActivity(address: string): Promise<DeFiInteraction[]>
+  calculateReputationScore(data: EnhancedBlockchainData): Promise<number>
 }
 
 export default User

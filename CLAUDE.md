@@ -5,12 +5,12 @@ Building an AI-powered on-chain identity and reputation platform on Sui blockcha
 
 ## Tech Stack
 - **Frontend**: Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
-- **Authentication**: Privy (social login + embedded Sui wallets)
+- **Authentication**: Sui zkLogin (OAuth2 + zero-knowledge proofs)
 - **Database**: Supabase (PostgreSQL with real-time)
 - **Blockchain**: Sui (testnet) + Move smart contracts
 - **Storage**: Walrus (decentralized storage for metadata)
 - **AI**: OpenAI GPT-4 (reputation analysis)
-- **APIs**: BlockVision (Sui indexing), GitHub, Twitter
+- **APIs**: Sui RPC (direct blockchain data), GitHub, Twitter
 
 ## API Keys & Configuration
 
@@ -21,10 +21,18 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### Privy
+### zkLogin OAuth Providers
 ```
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
-PRIVY_APP_SECRET=your_privy_app_secret
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+NEXT_PUBLIC_TWITTER_CLIENT_ID=your_twitter_client_id
+TWITTER_CLIENT_SECRET=your_twitter_client_secret
+
+JWT_SECRET=your_jwt_signing_secret_min_32_chars
 ```
 
 ### OpenAI
@@ -32,11 +40,11 @@ PRIVY_APP_SECRET=your_privy_app_secret
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-### BlockVision (Sui Indexing)
+### Optional: BlockVision (Enhanced Sui Indexing)
 ```
 BLOCKVISION_API_KEY=your_blockvision_api_key
-BLOCKVISION_HTTP_URL=https://sui-mainnet.blockvision.org/v1/YOUR_API_KEY
-BLOCKVISION_WS_URL=wss://sui-mainnet.blockvision.org/v1/YOUR_API_KEY
+BLOCKVISION_HTTP_URL=https://sui-testnet.blockvision.org/v1/YOUR_API_KEY
+BLOCKVISION_WS_URL=wss://sui-testnet.blockvision.org/v1/YOUR_API_KEY
 ```
 
 ### Sui Network
@@ -53,12 +61,20 @@ WALRUS_AGGREGATOR_URL=https://walrus-testnet-aggregator.natsai.xyz
 
 ## Database Schema
 
-### Users Table
+### Users Table (Enhanced for zkLogin)
 - id (UUID, PK)
 - wallet_address (TEXT, UNIQUE)
 - username (TEXT, UNIQUE)
 - email (TEXT)
+- zklogin_sub (TEXT) - OAuth subject identifier
+- oauth_provider ('google' | 'github' | 'twitter')
+- salt_value (TEXT) - zkLogin salt for address derivation
+- max_epoch (INTEGER) - Maximum epoch for key validity
+- ephemeral_public_key (TEXT) - Public key for verification
+- jwt_token (TEXT) - Stored JWT token
+- profile_picture (TEXT) - OAuth profile picture URL
 - created_at (TIMESTAMP)
+- updated_at (TIMESTAMP)
 
 ### Social Connections Table
 - id (UUID, PK)
@@ -87,12 +103,20 @@ WALRUS_AGGREGATOR_URL=https://walrus-testnet-aggregator.natsai.xyz
 - minted_at (TIMESTAMP)
 
 ## Core Features
-1. **Social Authentication**: Privy social login + embedded Sui wallets
-2. **Social Verification**: GitHub OAuth, Twitter/X API verification
-3. **AI Reputation**: OpenAI analysis of social/blockchain behavior
+1. **zkLogin Authentication**: Sui native OAuth2 + zero-knowledge proofs
+2. **Real Blockchain Data**: Direct Sui RPC integration for live data
+3. **AI Reputation**: OpenAI analysis of real onchain/offchain behavior  
 4. **Dynamic NFTs**: Sui Move contracts with updatable metadata
 5. **Gamification**: Quests, XP, badges, leaderboards, tipping
 6. **Decentralized Storage**: Walrus for metadata, avatars, badge images
+
+### New Tables (zkLogin Migration)
+- **zklogin_sessions** - Session management
+- **oauth_provider_data** - OAuth provider information  
+- **wallet_transactions** - Real blockchain transaction history
+- **user_nfts** - Real NFT ownership tracking
+- **defi_interactions** - DeFi protocol interaction history
+- **wallet_balances** - Real-time balance tracking
 
 ## Development Commands
 ```bash
@@ -102,6 +126,13 @@ npm run lint        # ESLint checking
 npm run type-check  # TypeScript checking
 npm run db:test     # Test database connection
 npm run setup:check # Check complete setup status
+
+# Health Checks
+curl http://localhost:3000/api/health                    # Overall health
+curl http://localhost:3000/api/health?check=database     # Database only  
+curl http://localhost:3000/api/health?check=blockchain   # Sui network only
+curl http://localhost:3000/api/health?check=oauth        # OAuth providers
+curl http://localhost:3000/api/health?check=environment  # Environment vars
 ```
 
 ## Quick Setup Guide

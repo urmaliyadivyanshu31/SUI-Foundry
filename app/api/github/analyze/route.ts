@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GitHubService } from '@/lib/github'
-import { SocialConnectionService } from '@/lib/db-functions'
+import { GitHubService } from '@/lib/ai/github'
+import { SocialConnectionService } from '@/lib/db/db-functions'
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { checkDatabaseStatus, getDatabaseStatusMessage } from '@/lib/database-status'
+import { checkDatabaseStatus, getDatabaseStatusMessage } from '@/lib/db/database-status'
 
 export async function GET() {
   try {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
-import { createNFTAdapter, checkBackendCompatibility } from '@/lib/nft-backend-adapter'
+import { withErrorHandler } from '@/lib/core/error-handler'
+import { createNFTAdapter, checkBackendCompatibility } from '@/lib/blockchain/nft-backend-adapter'
 
 // GET /api/nft/compatibility - Check backend compatibility and setup status
 export const GET = withErrorHandler(async () => {

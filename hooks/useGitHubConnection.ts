@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import type { GitHubProfileAnalysis } from '@/lib/github'
+import type { GitHubProfileAnalysis } from '@/lib/ai/github'
 
 interface UseGitHubConnectionReturn {
   // Connection actions

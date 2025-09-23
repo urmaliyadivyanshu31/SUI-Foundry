@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePrivy } from '@privy-io/react-auth'
+import { useZkLogin } from '@/lib/providers'
 import { useUserProfile, useUsernameValidator } from '@/hooks/useUserProfile'
-import { GitHubConnectionCard } from '@/components/ui/github-connection-card'
-import { CheckCircle, Circle, User, UserCheck, Wallet, Github, Twitter, Linkedin } from 'lucide-react'
+import { CheckCircle, User, UserCheck, Sparkles, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { motion } from 'framer-motion'
 
-type SetupStep = 'welcome' | 'username' | 'social' | 'complete'
+type SetupStep = 'welcome' | 'profile' | 'complete'
 
-// Logo Component matching homepage
+// Logo Component
 const LogoIcon = () => (
   <div style={{
     width: '32px',
@@ -27,53 +28,42 @@ const LogoIcon = () => (
       height: '16px',
       background: 'linear-gradient(45deg, #ffffff 0%, #cbb0ff 100%)',
       borderRadius: '4px',
-      position: 'relative'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: '2px',
-        left: '2px',
-        width: '12px',
-        height: '12px',
-        border: '2px solid rgba(255, 255, 255, 0.8)',
-        borderRadius: '2px'
-      }} />
-    </div>
+    }} />
   </div>
 )
 
 export default function ProfileSetupPage() {
   const router = useRouter()
-  const { user: privyUser, authenticated } = usePrivy()
-  const { profile, updateProfile, isLoading, profileCompletion, socialConnections, refreshProfile } = useUserProfile()
-  const { validateUsername, isChecking, isAvailable, validationError } = useUsernameValidator()
-  
+  const { user, isAuthenticated } = useZkLogin()
+  const { profile, updateProfile, isLoading: isProfileLoading } = useUserProfile()
   const [currentStep, setCurrentStep] = useState<SetupStep>('welcome')
   const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
+
+  // Username validation
+  const { 
+    isAvailable, 
+    isValidating, 
+    validationError, 
+    validateUsername 
+  } = useUsernameValidator()
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!authenticated) {
+    if (!isAuthenticated) {
       router.push('/')
     }
-  }, [authenticated, router])
+  }, [isAuthenticated, router])
 
-  // Set initial username from Privy data
+  // Auto-fill user data from authentication
   useEffect(() => {
-    if (privyUser && !username) {
-      const name = privyUser.google?.name || privyUser.twitter?.name || ''
-      if (name) {
-        const suggestedUsername = name
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, '')
-          .substring(0, 15)
-        setUsername(suggestedUsername)
-      }
+    if (user && !displayName) {
+      setDisplayName(user.name || user.email?.split('@')[0] || '')
     }
-  }, [privyUser, username])
+  }, [user, displayName])
 
-  // Handle username validation
+  // Validate username on change
   useEffect(() => {
     if (username && username.length >= 3) {
       const timer = setTimeout(() => {
@@ -84,799 +74,395 @@ export default function ProfileSetupPage() {
   }, [username, validateUsername, profile?.id])
 
   const steps = [
-    { id: 'welcome', title: 'Welcome', icon: User },
-    { id: 'username', title: 'Username', icon: UserCheck },
-    { id: 'social', title: 'Social', icon: Github },
+    { id: 'welcome', title: 'Welcome', icon: Sparkles },
+    { id: 'profile', title: 'Profile', icon: User },
     { id: 'complete', title: 'Complete', icon: CheckCircle }
   ]
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep)
   const progress = ((currentStepIndex + 1) / steps.length) * 100
 
-  const handleUsernameSubmit = async () => {
-    if (!isAvailable || validationError) {
-      toast.error('Please choose a valid username')
+  const handleProfileSubmit = async () => {
+    if (!isAvailable || validationError || !displayName.trim()) {
+      toast.error('Please complete all required fields')
       return
     }
 
     setIsUpdating(true)
     try {
-      const success = await updateProfile({ username })
+      const success = await updateProfile({ 
+        username: username.trim(),
+        // We'll set the display name as the username for now since we don't have a separate name field in the DB
+        // In a real implementation, you might want to add a display_name field to the database
+      })
+      
       if (success) {
-        toast.success('Username saved!')
-        setCurrentStep('social')
+        toast.success('Profile updated successfully!')
+        setCurrentStep('complete')
       } else {
-        toast.error('Failed to save username')
+        toast.error('Failed to update profile')
       }
     } catch (error) {
-      console.error('Username update error:', error)
-      toast.error('Failed to save username')
+      console.error('Profile update error:', error)
+      toast.error('Failed to update profile')
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const handleSkipToComplete = () => {
-    setCurrentStep('complete')
+  const handleComplete = () => {
+    router.push('/dashboard')
   }
 
-  const handleFinishSetup = () => {
-    toast.success('Welcome to SuiDentity!')
-    router.push('/')
-  }
-
-  if (!authenticated || isLoading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#0a0a0a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid rgba(203, 176, 255, 0.3)',
-          borderTop: '3px solid #cbb0ff',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
-      </div>
-    )
+  if (!isAuthenticated || !user) {
+    return null
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', color: 'white' }}>
-      {/* Fixed Navigation Bar */}
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #0a0a0a 0%, #111111 50%, #1a1a1a 100%)',
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Header */}
       <nav style={{
-        position: 'fixed',
-        top: '24px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 50,
-        width: '100%',
-        maxWidth: '1200px',
-        padding: '0 24px'
+        padding: '16px 24px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
       }}>
         <div style={{
-          backgroundColor: 'rgba(20, 20, 24, 0.8)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(203, 176, 255, 0.1)',
-          borderRadius: '16px',
-          padding: '12px 24px',
-          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
+          maxWidth: '600px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            {/* Left - Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <LogoIcon />
-              <span style={{
-                fontSize: '16px',
-                fontWeight: '600',
-                background: 'linear-gradient(135deg, #ffffff 0%, #cbb0ff 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}>SuiDentity</span>
-            </div>
-            
-            {/* Right - Back to Home */}
-            <button 
-              onClick={() => router.push('/')}
-              style={{
-                background: 'transparent',
-                color: '#9ca3af',
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontWeight: '500',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid rgba(156, 163, 175, 0.3)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#ffffff'
-                e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.5)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#9ca3af'
-                e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.3)'
-              }}
-            >
-              ← Back to Home
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <LogoIcon />
+            <span style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#ffffff'
+            }}>
+              SuiDentity
+            </span>
+          </div>
+          
+          <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+            Setup Profile
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div style={{ paddingTop: '120px', minHeight: '100vh', position: 'relative' }}>
-        {/* Background gradient */}
+      <main style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '40px 24px'
+      }}>
         <div style={{
-          position: 'absolute',
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          background: 'radial-gradient(ellipse at center top, rgba(147, 51, 234, 0.15) 0%, transparent 50%)',
-          pointerEvents: 'none'
-        }} />
-
-        <div style={{
-          maxWidth: '800px',
-          width: '100%',
+          maxWidth: '600px',
           margin: '0 auto',
-          padding: '0 24px',
-          position: 'relative',
-          zIndex: 10
+          width: '100%'
         }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h1 style={{
-              fontSize: '48px',
-              fontWeight: '700',
-              lineHeight: '1.1',
-              marginBottom: '16px',
-              background: 'linear-gradient(180deg, #ffffff 0%, #cbb0ff 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              PROFILE SETUP
-            </h1>
-            <p style={{
-              fontSize: '18px',
-              color: '#9ca3af',
-              lineHeight: '1.6',
-              maxWidth: '480px',
-              margin: '0 auto'
-            }}>
-              Complete your Web3 identity profile and start building your reputation
-            </p>
-          </div>
-
-          {/* Progress Steps */}
-          <div style={{ marginBottom: '48px' }}>
+          {/* Progress Bar */}
+          <div style={{
+            marginBottom: '40px'
+          }}>
             <div style={{
               display: 'flex',
+              alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '24px',
-              position: 'relative'
+              marginBottom: '16px'
             }}>
-              {/* Progress line */}
-              <div style={{
-                position: 'absolute',
-                top: '24px',
-                left: '24px',
-                right: '24px',
-                height: '2px',
-                background: 'rgba(156, 163, 175, 0.3)',
-                zIndex: 1
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: `${(currentStepIndex / (steps.length - 1)) * 100}%`,
-                  background: 'linear-gradient(90deg, #cbb0ff 0%, #9333ea 100%)',
-                  transition: 'width 0.3s ease'
-                }} />
-              </div>
-
               {steps.map((step, index) => {
-                const StepIcon = step.icon
-                const isCompleted = index < currentStepIndex
+                const isActive = index <= currentStepIndex
                 const isCurrent = index === currentStepIndex
+                const Icon = step.icon
                 
                 return (
-                  <div key={step.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+                  <div key={step.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    flex: 1,
+                    position: 'relative'
+                  }}>
                     <div style={{
-                      width: '48px',
-                      height: '48px',
+                      width: '40px',
+                      height: '40px',
                       borderRadius: '50%',
+                      background: isActive 
+                        ? 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)'
+                        : 'rgba(255, 255, 255, 0.1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      marginBottom: '8px',
-                      background: isCompleted ? 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)' : 
-                                 isCurrent ? 'rgba(20, 20, 24, 0.8)' : 'rgba(60, 60, 64, 0.8)',
-                      border: isCurrent ? '2px solid #cbb0ff' : '2px solid rgba(156, 163, 175, 0.3)',
-                      color: isCompleted ? '#ffffff' : isCurrent ? '#cbb0ff' : '#9ca3af',
-                      backdropFilter: 'blur(12px)',
-                      transition: 'all 0.3s ease'
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: isCurrent ? '2px solid #9333ea' : 'none'
                     }}>
-                      <StepIcon style={{ width: '20px', height: '20px' }} />
+                      <Icon size={18} />
                     </div>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: isCurrent ? '#cbb0ff' : '#9ca3af',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
-                      {step.title}
-                    </span>
+                    
+                    {index < steps.length - 1 && (
+                      <div style={{
+                        flex: 1,
+                        height: '2px',
+                        background: isActive 
+                          ? 'linear-gradient(90deg, #9333ea 0%, #c084fc 100%)'
+                          : 'rgba(255, 255, 255, 0.1)',
+                        marginLeft: '8px'
+                      }} />
+                    )}
                   </div>
                 )
               })}
             </div>
+            
+            <div style={{
+              fontSize: '14px',
+              color: '#9ca3af',
+              textAlign: 'center'
+            }}>
+              Step {currentStepIndex + 1} of {steps.length}
+            </div>
           </div>
 
           {/* Step Content */}
-          <div style={{
-            backgroundColor: 'rgba(20, 20, 24, 0.8)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(203, 176, 255, 0.1)',
-            borderRadius: '16px',
-            padding: '48px',
-            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
-          }}>
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              padding: '40px',
+              textAlign: 'center'
+            }}
+          >
             {currentStep === 'welcome' && (
-              <div style={{ textAlign: 'center' }}>
+              <div>
                 <div style={{
                   width: '80px',
                   height: '80px',
-                  background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
                   borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 24px'
                 }}>
-                  <Wallet style={{ width: '40px', height: '40px', color: 'white' }} />
+                  <Sparkles size={32} color="white" />
                 </div>
+                
                 <h2 style={{
-                  fontSize: '32px',
+                  fontSize: '28px',
                   fontWeight: '700',
                   marginBottom: '16px',
-                  color: 'white'
+                  color: '#ffffff'
                 }}>
-                  Your Web3 Journey Starts Here
+                  Welcome to SuiDentity!
                 </h2>
+                
                 <p style={{
                   fontSize: '16px',
                   color: '#9ca3af',
+                  lineHeight: '1.6',
                   marginBottom: '32px',
-                  lineHeight: '1.6'
+                  maxWidth: '400px',
+                  margin: '0 auto 32px'
                 }}>
-                  Hi {privyUser?.google?.name || privyUser?.twitter?.name || 'there'}! 
-                  Let's build your on-chain identity and reputation.
+                  Hi {user.name || user.email || 'there'}! Let's set up your decentralized identity profile.
                 </p>
                 
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '16px',
-                  marginBottom: '32px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '16px',
-                    background: 'rgba(34, 197, 94, 0.1)',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    borderRadius: '8px'
-                  }}>
-                    <CheckCircle style={{ width: '20px', height: '20px', color: '#22c55e' }} />
-                    <span style={{ fontSize: '14px', color: 'white' }}>Wallet Connected</span>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '16px',
-                    background: 'rgba(34, 197, 94, 0.1)',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    borderRadius: '8px'
-                  }}>
-                    <CheckCircle style={{ width: '20px', height: '20px', color: '#22c55e' }} />
-                    <span style={{ fontSize: '14px', color: 'white' }}>Profile Created</span>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => setCurrentStep('username')}
+                <Button
+                  onClick={() => setCurrentStep('profile')}
                   style={{
-                    background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
-                    color: 'white',
+                    background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 24px',
                     fontSize: '16px',
                     fontWeight: '600',
-                    padding: '16px 32px',
-                    borderRadius: '10px',
-                    border: 'none',
+                    color: 'white',
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 24px rgba(203, 176, 255, 0.4)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(203, 176, 255, 0.6)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 24px rgba(203, 176, 255, 0.4)'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    margin: '0 auto'
                   }}
                 >
-                  Let's Get Started →
-                </button>
+                  Get Started <ArrowRight size={16} />
+                </Button>
               </div>
             )}
 
-            {currentStep === 'username' && (
+            {currentStep === 'profile' && (
               <div>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                  <h2 style={{
-                    fontSize: '32px',
-                    fontWeight: '700',
-                    marginBottom: '16px',
-                    color: 'white'
-                  }}>
-                    Choose Your Username
-                  </h2>
-                  <p style={{
-                    fontSize: '16px',
-                    color: '#9ca3af',
-                    lineHeight: '1.6'
-                  }}>
-                    This will be your unique identifier on SuiDentity
-                  </p>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 24px'
+                }}>
+                  <User size={32} color="white" />
                 </div>
                 
-                <div style={{ marginBottom: '32px' }}>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: 'white',
-                    marginBottom: '8px'
-                  }}>
-                    Username
-                  </label>
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      fontSize: '16px',
-                      background: 'rgba(60, 60, 64, 0.8)',
-                      border: '1px solid rgba(156, 163, 175, 0.3)',
-                      borderRadius: '8px',
-                      color: 'white',
-                      outline: 'none',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = '#cbb0ff'
-                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(203, 176, 255, 0.1)'
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.3)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  />
-                  {isChecking && (
-                    <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '8px' }}>
-                      Checking availability...
-                    </p>
-                  )}
-                  {validationError && (
-                    <p style={{ fontSize: '14px', color: '#ef4444', marginTop: '8px' }}>
-                      {validationError}
-                    </p>
-                  )}
-                  {isAvailable === true && !validationError && (
-                    <p style={{ fontSize: '14px', color: '#22c55e', marginTop: '8px' }}>
-                      ✓ Username is available
-                    </p>
-                  )}
-                </div>
-
-                <div style={{
-                  background: 'rgba(60, 60, 64, 0.5)',
-                  padding: '16px',
-                  borderRadius: '8px',
+                <h2 style={{
+                  fontSize: '28px',
+                  fontWeight: '700',
+                  marginBottom: '16px',
+                  color: '#ffffff'
+                }}>
+                  Create Your Profile
+                </h2>
+                
+                <p style={{
+                  fontSize: '16px',
+                  color: '#9ca3af',
                   marginBottom: '32px'
                 }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '12px' }}>
-                    Username Requirements:
-                  </h4>
-                  <ul style={{ fontSize: '14px', color: '#9ca3af', lineHeight: '1.6', paddingLeft: '20px' }}>
-                    <li>3-20 characters long</li>
-                    <li>Only letters, numbers, and underscores</li>
-                    <li>Must be unique</li>
-                  </ul>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button 
-                    onClick={() => setCurrentStep('welcome')}
-                    style={{
-                      background: 'transparent',
-                      color: '#9ca3af',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(156, 163, 175, 0.3)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#ffffff'
-                      e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#9ca3af'
-                      e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.3)'
-                    }}
-                  >
-                    Back
-                  </button>
-                  <button 
-                    onClick={handleUsernameSubmit}
-                    disabled={!isAvailable || !!validationError || isUpdating}
-                    style={{
-                      flex: 1,
-                      background: !isAvailable || !!validationError || isUpdating ? 
-                        'rgba(156, 163, 175, 0.3)' : 
-                        'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
-                      color: 'white',
+                  Choose a unique username for your SuiDentity profile.
+                </p>
+                
+                <div style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={{
+                      display: 'block',
                       fontSize: '14px',
                       fontWeight: '600',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      cursor: !isAvailable || !!validationError || isUpdating ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.3s ease',
-                      opacity: !isAvailable || !!validationError || isUpdating ? 0.5 : 1
-                    }}
-                  >
-                    {isUpdating ? 'Saving...' : 'Continue →'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 'social' && (
-              <div>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                  <h2 style={{
-                    fontSize: '32px',
-                    fontWeight: '700',
-                    marginBottom: '16px',
-                    color: 'white'
-                  }}>
-                    Connect Social Accounts
-                  </h2>
-                  <p style={{
-                    fontSize: '16px',
-                    color: '#9ca3af',
-                    lineHeight: '1.6'
-                  }}>
-                    Connect your social accounts to build your reputation score
-                  </p>
-                </div>
-
-                <div style={{ marginBottom: '32px' }}>
-                  {/* GitHub Connection Card */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <GitHubConnectionCard
-                      userId={profile?.id || ''}
-                      socialConnections={socialConnections}
-                      onConnectionUpdate={refreshProfile}
+                      color: '#ffffff',
+                      marginBottom: '8px'
+                    }}>
+                      Username *
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      placeholder="Enter username"
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        color: 'white',
+                        fontSize: '16px',
+                        width: '100%',
+                        outline: 'none'
+                      }}
                     />
-                  </div>
-
-                  {/* Twitter/X Connection */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px',
-                    background: 'rgba(60, 60, 64, 0.5)',
-                    border: '1px solid rgba(156, 163, 175, 0.3)',
-                    borderRadius: '8px',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Twitter style={{ width: '24px', height: '24px', color: '#1DA1F2' }} />
-                      <div>
-                        <p style={{ fontSize: '16px', fontWeight: '500', color: 'white', margin: '0 0 4px 0' }}>
-                          Twitter/X
-                        </p>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
-                          {privyUser?.twitter ? 
-                            `Connected as ${privyUser.twitter.name}` : 
-                            'Connect your social presence'
-                          }
-                        </p>
+                    
+                    {username && (
+                      <div style={{ marginTop: '8px', fontSize: '12px' }}>
+                        {isValidating ? (
+                          <span style={{ color: '#9ca3af' }}>Checking availability...</span>
+                        ) : validationError ? (
+                          <span style={{ color: '#ef4444' }}>{validationError}</span>
+                        ) : isAvailable ? (
+                          <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <CheckCircle size={12} />
+                            Username available
+                          </span>
+                        ) : username.length >= 3 ? (
+                          <span style={{ color: '#ef4444' }}>Username not available</span>
+                        ) : null}
                       </div>
-                    </div>
-                    <div style={{
-                      padding: '4px 12px',
-                      background: privyUser?.twitter ? 'rgba(34, 197, 94, 0.2)' : 'rgba(156, 163, 175, 0.2)',
-                      border: `1px solid ${privyUser?.twitter ? 'rgba(34, 197, 94, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`,
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      color: privyUser?.twitter ? '#22c55e' : '#9ca3af',
-                      fontWeight: '500'
-                    }}>
-                      {privyUser?.twitter ? "Connected" : "Available in Privy"}
-                    </div>
+                    )}
                   </div>
 
-                  {/* LinkedIn Connection */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px',
-                    background: 'rgba(60, 60, 64, 0.3)',
-                    border: '1px solid rgba(156, 163, 175, 0.2)',
-                    borderRadius: '8px',
-                    opacity: 0.6,
-                    marginBottom: '24px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Linkedin style={{ width: '24px', height: '24px', color: '#0077B5' }} />
-                      <div>
-                        <p style={{ fontSize: '16px', fontWeight: '500', color: 'white', margin: '0 0 4px 0' }}>
-                          LinkedIn
-                        </p>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
-                          Coming soon in next update
-                        </p>
-                      </div>
-                    </div>
-                    <div style={{
-                      padding: '4px 12px',
-                      background: 'rgba(156, 163, 175, 0.2)',
-                      border: '1px solid rgba(156, 163, 175, 0.3)',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      color: '#9ca3af',
-                      fontWeight: '500'
-                    }}>
-                      Coming Soon
-                    </div>
-                  </div>
-
-                  <div style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    padding: '16px',
-                    borderRadius: '8px'
-                  }}>
-                    <p style={{ fontSize: '14px', color: '#93c5fd', margin: 0 }}>
-                      💡 Connecting social accounts helps our AI calculate a more accurate reputation score
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button 
-                    onClick={() => setCurrentStep('username')}
+                  <Button
+                    onClick={handleProfileSubmit}
+                    disabled={!isAvailable || validationError || !username.trim() || isUpdating}
                     style={{
-                      background: 'transparent',
-                      color: '#9ca3af',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(156, 163, 175, 0.3)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#ffffff'
-                      e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#9ca3af'
-                      e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.3)'
-                    }}
-                  >
-                    Back
-                  </button>
-                  <button 
-                    onClick={handleSkipToComplete}
-                    style={{
-                      flex: 1,
-                      background: 'transparent',
-                      color: '#9ca3af',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(156, 163, 175, 0.3)',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = '#ffffff'
-                      e.currentTarget.style.borderColor = 'rgba(203, 176, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = '#9ca3af'
-                      e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.3)'
-                    }}
-                  >
-                    Skip for Now
-                  </button>
-                  <button 
-                    onClick={() => setCurrentStep('complete')}
-                    style={{
-                      background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
+                      background: (!isAvailable || validationError || !username.trim()) 
+                        ? 'rgba(255, 255, 255, 0.1)' 
+                        : 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
                       border: 'none',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
+                      borderRadius: '8px',
+                      padding: '12px 24px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: 'white',
+                      cursor: (!isAvailable || validationError || !username.trim()) ? 'not-allowed' : 'pointer',
+                      width: '100%',
+                      opacity: isUpdating ? 0.7 : 1
                     }}
                   >
-                    Continue →
-                  </button>
+                    {isUpdating ? 'Saving...' : 'Continue'}
+                  </Button>
                 </div>
               </div>
             )}
 
             {currentStep === 'complete' && (
-              <div style={{ textAlign: 'center' }}>
+              <div>
                 <div style={{
                   width: '80px',
                   height: '80px',
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                   borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 24px'
                 }}>
-                  <CheckCircle style={{ width: '40px', height: '40px', color: 'white' }} />
+                  <CheckCircle size={32} color="white" />
                 </div>
+                
                 <h2 style={{
-                  fontSize: '32px',
+                  fontSize: '28px',
                   fontWeight: '700',
                   marginBottom: '16px',
-                  color: 'white'
+                  color: '#ffffff'
                 }}>
-                  Profile Setup Complete!
+                  Profile Created!
                 </h2>
+                
                 <p style={{
                   fontSize: '16px',
                   color: '#9ca3af',
+                  lineHeight: '1.6',
                   marginBottom: '32px',
-                  lineHeight: '1.6'
+                  maxWidth: '400px',
+                  margin: '0 auto 32px'
                 }}>
-                  Your SuiDentity profile is ready. You can always add more social connections later.
+                  Your SuiDentity profile has been created successfully. You can now explore the dashboard and connect additional social accounts.
                 </p>
                 
-                <div style={{
-                  background: 'rgba(60, 60, 64, 0.5)',
-                  padding: '24px',
-                  borderRadius: '12px',
-                  marginBottom: '32px'
-                }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: '600', color: 'white', marginBottom: '16px' }}>
-                    Profile Completion: {profileCompletion}%
-                  </h4>
-                  <div style={{
-                    width: '100%',
-                    height: '8px',
-                    background: 'rgba(156, 163, 175, 0.3)',
-                    borderRadius: '4px',
-                    marginBottom: '16px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      width: `${profileCompletion}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #cbb0ff 0%, #9333ea 100%)',
-                      transition: 'width 0.3s ease'
-                    }} />
-                  </div>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '12px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle style={{ width: '16px', height: '16px', color: '#22c55e' }} />
-                      <span style={{ fontSize: '14px', color: 'white' }}>Wallet Connected</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle style={{ width: '16px', height: '16px', color: '#22c55e' }} />
-                      <span style={{ fontSize: '14px', color: 'white' }}>Username Set</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {privyUser?.twitter ? 
-                        <CheckCircle style={{ width: '16px', height: '16px', color: '#22c55e' }} /> :
-                        <Circle style={{ width: '16px', height: '16px', color: '#9ca3af' }} />
-                      }
-                      <span style={{ fontSize: '14px', color: 'white' }}>Social Connected</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Circle style={{ width: '16px', height: '16px', color: '#9ca3af' }} />
-                      <span style={{ fontSize: '14px', color: 'white' }}>Reputation Calculated</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={handleFinishSetup}
+                <Button
+                  onClick={handleComplete}
                   style={{
-                    background: 'linear-gradient(135deg, #cbb0ff 0%, #9333ea 100%)',
-                    color: 'white',
+                    background: 'linear-gradient(135deg, #10b981 0%, #34d399 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 24px',
                     fontSize: '16px',
                     fontWeight: '600',
-                    padding: '16px 32px',
-                    borderRadius: '10px',
-                    border: 'none',
+                    color: 'white',
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 24px rgba(203, 176, 255, 0.4)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(203, 176, 255, 0.6)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 4px 24px rgba(203, 176, 255, 0.4)'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    margin: '0 auto'
                   }}
                 >
-                  Enter SuiDentity →
-                </button>
+                  Enter Dashboard <ArrowRight size={16} />
+                </Button>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

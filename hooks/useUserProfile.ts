@@ -1,11 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { usePrivy } from '@privy-io/react-auth'
+import { useZkLogin } from '@/lib/providers'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { UserService, SocialConnectionService, ProfileUtils } from '@/lib/db-functions'
+import { UserService, SocialConnectionService, ProfileUtils } from '@/lib/db/db-functions'
 import type { User, UserProfile, SocialConnection } from '@/types'
 import { toast } from 'sonner'
+
+// Generate a proper UUID for mock users
+function generateMockUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c == 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 
 interface UseUserProfileReturn {
   // Data
@@ -34,7 +43,7 @@ interface UseUserProfileReturn {
 }
 
 export function useUserProfile(): UseUserProfileReturn {
-  const { user: privyUser, authenticated, ready } = usePrivy()
+  const { user: zkLoginUser, isAuthenticated } = useZkLogin()
   const queryClient = useQueryClient()
   const [error, setError] = useState<string | null>(null)
 
@@ -45,33 +54,78 @@ export function useUserProfile(): UseUserProfileReturn {
     error: profileError,
     refetch: refetchProfile
   } = useQuery({
-    queryKey: ['userProfile', privyUser?.id],
+    queryKey: ['userProfile', zkLoginUser?.sub],
     queryFn: async () => {
-      if (!privyUser) return null
+      if (!zkLoginUser) return null
 
       try {
-        // First, create or update user from Privy data
-        const user = await UserService.createOrUpdateUser(privyUser)
-        if (!user) {
+        console.log('🔍 Debug - zkLoginUser data:', zkLoginUser)
+        
+        // Extract wallet address from various possible sources
+        const walletAddress = zkLoginUser.walletAddress || zkLoginUser.address
+        
+        console.log('🔍 Debug - extracted wallet address:', walletAddress)
+        
+        // If no wallet address is available, return mock profile
+        if (!walletAddress) {
+          console.warn('⚠️ No wallet address available, returning mock profile')
+          return {
+            id: generateMockUUID(),
+            username: zkLoginUser.name || 'Anonymous',
+            email: zkLoginUser.email || null,
+            wallet_address: null,
+            zklogin_sub: zkLoginUser.sub,
+            oauth_provider: zkLoginUser.provider,
+            profile_picture: zkLoginUser.picture,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } as User
+        }
+        
+        // Create zkLogin user data for database
+        const zkLoginUserData = {
+          address: walletAddress,
+          walletAddress: walletAddress,
+          email: zkLoginUser.email,
+          name: zkLoginUser.name,
+          picture: zkLoginUser.picture,
+          provider: zkLoginUser.provider || 'google',
+          sub: zkLoginUser.sub || zkLoginUser.email
+        }
+        
+        console.log('🔍 Debug - processed zkLoginUserData:', zkLoginUserData)
+
+        // Create or update user with blockchain data integration
+        const result = await UserService.createOrUpdateEnokiUserWithBlockchainData(zkLoginUserData)
+        
+        if (!result.user) {
+          console.warn('Failed to create/update user, using mock profile for demo')
           // Return mock profile for development when DB is not available
           return {
-            id: 'mock-user-id',
-            username: privyUser.google?.name || privyUser.twitter?.name || 'Anonymous',
-            email: privyUser.email?.address || null,
-            wallet_address: privyUser.wallet?.address || null,
-            created_at: new Date().toISOString()
+            id: generateMockUUID(),
+            username: zkLoginUser.name || 'Anonymous',
+            email: zkLoginUser.email || null,
+            wallet_address: zkLoginUser.walletAddress,
+            zklogin_sub: zkLoginUser.sub,
+            oauth_provider: zkLoginUser.provider,
+            profile_picture: zkLoginUser.picture,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         }
+
+        const user = result.user
 
         // Then fetch complete profile
         const profile = await UserService.getUserProfile(user.id)
         if (!profile) {
           return {
-            id: user.id,
-            username: user.username || privyUser.google?.name || privyUser.twitter?.name || 'Anonymous',
-            email: user.email || privyUser.email?.address || null,
-            wallet_address: user.wallet_address || privyUser.wallet?.address || null,
-            created_at: user.created_at || new Date().toISOString()
+            ...user,
+            social_connections: [],
+            reputation_scores: [],
+            identity_nfts: [],
+            user_badges: [],
+            quest_progress: []
           }
         }
 
@@ -80,15 +134,24 @@ export function useUserProfile(): UseUserProfileReturn {
         console.warn('Database error, using mock profile for demo:', error)
         // Return mock profile for development when DB is not available
         return {
-          id: 'mock-user-id',
-          username: privyUser.google?.name || privyUser.twitter?.name || 'Anonymous',
-          email: privyUser.email?.address || null,
-          wallet_address: privyUser.wallet?.address || null,
-          created_at: new Date().toISOString()
+          id: generateMockUUID(),
+          username: zkLoginUser.name || 'Anonymous',
+          email: zkLoginUser.email || null,
+          wallet_address: zkLoginUser.walletAddress,
+          zklogin_sub: zkLoginUser.sub,
+          oauth_provider: zkLoginUser.provider,
+          profile_picture: zkLoginUser.picture,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          social_connections: [],
+          reputation_scores: [],
+          identity_nfts: [],
+          user_badges: [],
+          quest_progress: []
         }
       }
     },
-    enabled: authenticated && ready && !!privyUser,
+    enabled: isAuthenticated && !!zkLoginUser,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   })
@@ -130,9 +193,12 @@ export function useUserProfile(): UseUserProfileReturn {
     },
     onError: (error: any) => {
       console.error('❌ Update profile error:', {
-        message: error.message || 'Unknown error',
-        stack: error.stack,
-        error: error
+        message: error?.message || 'Unknown error',
+        name: error?.name || 'Unknown error name',
+        stack: error?.stack || 'No stack trace',
+        code: error?.code || 'NO_CODE',
+        details: error?.details || 'No details available',
+        errorString: String(error)
       })
       const errorMessage = error.message || 'Failed to update profile - please try again'
       toast.error(errorMessage)
