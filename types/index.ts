@@ -387,4 +387,246 @@ export interface BlockchainDataFetcher {
   calculateReputationScore(data: EnhancedBlockchainData): Promise<number>
 }
 
+// Job Board System Types
+
+export interface Company {
+  id: string
+  name: string
+  description?: string
+  website?: string
+  logo_url?: string
+  company_size?: '1-10' | '11-50' | '51-200' | '201-1000' | '1000+'
+  industry?: string
+  location?: string
+  wallet_address?: string
+  created_by: string
+  verified: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface JobSkill {
+  id: string
+  name: string
+  category: 'blockchain' | 'programming' | 'design' | 'marketing' | 'business' | 'other'
+  description?: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface Job {
+  id: string
+  company_id: string
+  title: string
+  description: string
+  requirements: string
+  job_type: 'full-time' | 'part-time' | 'contract' | 'freelance' | 'internship'
+  experience_level: 'entry' | 'mid' | 'senior' | 'lead' | 'executive'
+  location_type: 'remote' | 'on-site' | 'hybrid'
+  location?: string
+  salary_min?: number
+  salary_max?: number
+  salary_currency: string
+  min_reputation_score: number
+  required_skills: string[] // Array of skill IDs
+  preferred_skills: string[] // Array of skill IDs
+  benefits?: string[]
+  application_deadline?: string
+  is_active: boolean
+  view_count: number
+  application_count: number
+  featured: boolean
+  remote_friendly: boolean
+  equity_offered: boolean
+  crypto_payment: boolean
+  sui_payment: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface JobApplication {
+  id: string
+  job_id: string
+  applicant_id: string
+  company_id: string
+  status: 'pending' | 'reviewed' | 'shortlisted' | 'interviewed' | 'rejected' | 'hired'
+  cover_letter?: string
+  resume_url?: string
+  portfolio_url?: string
+  github_url?: string
+  expected_salary?: number
+  availability?: string
+  ai_match_score: number
+  reputation_at_application: number
+  skills_match_count: number
+  hr_rating?: number // 1-5
+  hr_notes?: string
+  interview_scheduled_at?: string
+  response_deadline?: string
+  applied_at: string
+  updated_at: string
+}
+
+export interface UserSkill {
+  id: string
+  user_id: string
+  skill_id: string
+  proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  verified: boolean
+  verification_source?: string
+  years_experience?: number
+  created_at: string
+}
+
+export interface JobView {
+  id: string
+  job_id: string
+  user_id?: string
+  viewed_at: string
+  ip_address?: string
+  user_agent?: string
+}
+
+export interface JobSaved {
+  id: string
+  job_id: string
+  user_id: string
+  saved_at: string
+}
+
+export interface InterviewSchedule {
+  id: string
+  application_id: string
+  scheduled_by: string
+  interview_type: 'phone' | 'video' | 'in-person' | 'technical'
+  scheduled_at: string
+  duration_minutes: number
+  meeting_link?: string
+  location?: string
+  notes?: string
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled'
+  feedback?: string
+  rating?: number // 1-5
+  created_at: string
+  updated_at: string
+}
+
+// Extended job types with relations
+export interface JobWithDetails extends Job {
+  company: Company
+  required_skills_details: JobSkill[]
+  preferred_skills_details: JobSkill[]
+  applications?: JobApplication[]
+  user_saved?: boolean
+  user_applied?: boolean
+}
+
+export interface JobApplicationWithDetails extends JobApplication {
+  job: JobWithDetails
+  applicant: UserProfile
+  company: Company
+  interview_schedules?: InterviewSchedule[]
+}
+
+export interface CompanyWithJobs extends Company {
+  jobs: Job[]
+  total_jobs: number
+  active_jobs: number
+}
+
+export interface UserWithSkills extends UserProfile {
+  user_skills: (UserSkill & { skill: JobSkill })[]
+  job_applications?: JobApplicationWithDetails[]
+}
+
+// Job form types
+export interface JobPostForm {
+  title: string
+  description: string
+  requirements: string
+  job_type: Job['job_type']
+  experience_level: Job['experience_level']
+  location_type: Job['location_type']
+  location?: string
+  salary_min?: number
+  salary_max?: number
+  salary_currency: string
+  min_reputation_score: number
+  required_skills: string[]
+  preferred_skills: string[]
+  benefits?: string[]
+  application_deadline?: string
+  remote_friendly: boolean
+  equity_offered: boolean
+  crypto_payment: boolean
+  sui_payment: boolean
+}
+
+export interface JobApplicationForm {
+  cover_letter?: string
+  resume_url?: string
+  portfolio_url?: string
+  github_url?: string
+  expected_salary?: number
+  availability?: string
+}
+
+export interface CompanyForm {
+  name: string
+  description?: string
+  website?: string
+  logo_url?: string
+  company_size?: Company['company_size']
+  industry?: string
+  location?: string
+  wallet_address?: string
+}
+
+// Job search and filtering
+export interface JobSearchFilters {
+  search?: string
+  job_type?: Job['job_type'][]
+  experience_level?: Job['experience_level'][]
+  location_type?: Job['location_type'][]
+  skills?: string[]
+  salary_min?: number
+  salary_max?: number
+  company_size?: Company['company_size'][]
+  remote_friendly?: boolean
+  crypto_payment?: boolean
+  sui_payment?: boolean
+  featured_only?: boolean
+}
+
+export interface JobSearchResults {
+  jobs: JobWithDetails[]
+  total_count: number
+  has_more: boolean
+  filters_applied: JobSearchFilters
+}
+
+// HR Dashboard types
+export interface ApplicationStats {
+  total_applications: number
+  pending: number
+  reviewed: number
+  shortlisted: number
+  interviewed: number
+  rejected: number
+  hired: number
+}
+
+export interface HRDashboardData {
+  company: CompanyWithJobs
+  recent_applications: JobApplicationWithDetails[]
+  application_stats: ApplicationStats
+  top_candidates: JobApplicationWithDetails[]
+  job_performance: {
+    job: JobWithDetails
+    application_count: number
+    avg_match_score: number
+    view_to_application_ratio: number
+  }[]
+}
+
 export default User

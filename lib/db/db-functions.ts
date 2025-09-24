@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin, isSupabaseConfigured, type Database } from '../core/supabase'
+import { supabaseAdmin, isSupabaseConfigured, type Database } from '../core/supabase'
 import { isValidSuiAddress } from '@mysten/sui/utils'
 import type { User, SocialConnection, ReputationScore, UserProfile, EnhancedBlockchainData } from '@/types'
 import { getCompleteUserData } from '../blockchain/blockchain-data'
@@ -69,31 +69,60 @@ export class UserService {
         jwt_token: null
       }
 
-      // First, create or update the user
-      const user = await this.createOrUpdateZkLoginUser(userData)
-      if (!user) {
-        return { user: null, error: 'Failed to create or update user' }
-      }
-
-      // Fetch complete blockchain data for the user's wallet
-      let blockchainData: EnhancedBlockchainData | undefined
+      // First, create or update the user via API route (more reliable)
+      console.log('🔄 Creating user via API route instead of direct DB access')
+      
       try {
-        console.log('🔍 Fetching blockchain data for wallet:', zkLoginUserData.wallet_address)
-        blockchainData = await getCompleteUserData(zkLoginUserData.wallet_address)
+        const response = await fetch('/api/users/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
+        })
         
-        // Store blockchain data in database if available
-        if (isSupabaseConfigured() && blockchainData) {
-          await this.storeBlockchainData(user.id, blockchainData)
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('❌ API user creation failed:', errorData)
+          return { user: null, error: errorData.error || 'API user creation failed' }
         }
-      } catch (blockchainError) {
-        console.warn('⚠️ Failed to fetch blockchain data, continuing with user creation:', blockchainError)
-        // Don't fail user creation if blockchain data fails
-      }
+        
+        const apiResult = await response.json()
+        const user = apiResult.user
+        
+        if (!user) {
+          return { user: null, error: 'API returned no user data' }
+        }
+        
+        console.log('✅ User created/updated via API:', user.id)
+        
+        // Skip blockchain data fetching - wallet not properly connected
+        // This should only be called when user has a real wallet connected
+        // Not during initial auth/setup
+        let blockchainData: EnhancedBlockchainData | undefined
+        console.log('⏭️ Skipping blockchain data fetch during initial setup')
 
-      return { 
-        user, 
-        blockchainData,
-        error: undefined 
+        return { 
+          user, 
+          blockchainData,
+          error: undefined 
+        }
+        
+      } catch (apiError) {
+        console.error('❌ API call failed, falling back to direct DB access:', apiError)
+        // Fallback to direct database access
+        const user = await this.createOrUpdateZkLoginUser(userData)
+        if (!user) {
+          return { user: null, error: 'Failed to create or update user' }
+        }
+        
+        // Skip blockchain data fetching - wallet not properly connected
+        let blockchainData: EnhancedBlockchainData | undefined
+        console.log('⏭️ Skipping blockchain data fetch during initial setup')
+
+        return { 
+          user, 
+          blockchainData,
+          error: undefined 
+        }
       }
     } catch (error) {
       console.error('❌ Error in createOrUpdateZkLoginUserWithBlockchainData:', error)
@@ -196,42 +225,120 @@ export class UserService {
     }
   }
 
-  // Create or update user profile from zkLogin authentication via API route
+  // Create or update user profile from zkLogin authentication via direct database call
   static async createOrUpdateZkLoginUser(zkLoginUserData: any): Promise<User | null> {
     try {
-      const walletAddress = zkLoginUserData.wallet_address
+      const {
+        wallet_address,
+        email,
+        username,
+        zklogin_sub,
+        oauth_provider,
+        profile_picture,
+        salt_value,
+        max_epoch,
+        ephemeral_public_key,
+        jwt_token
+      } = zkLoginUserData
 
       // Validate wallet address before any operations
-      if (!walletAddress || !isValidSuiAddress(walletAddress)) {
-        console.error('❌ Invalid Sui wallet address:', walletAddress)
+      if (!wallet_address || !isValidSuiAddress(wallet_address)) {
+        console.error('❌ Invalid Sui wallet address:', wallet_address)
         return null
       }
 
-      console.log('📝 Creating user via API route:', {
-        wallet_address: walletAddress,
-        email: zkLoginUserData.email,
-        oauth_provider: zkLoginUserData.oauth_provider
-      })
-
-      // Call the API route for user creation
-      const response = await fetch('/api/users/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(zkLoginUserData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('❌ API error creating user:', errorData)
+      if (!isSupabaseConfigured()) {
+        console.error('❌ Supabase is not properly configured')
         return null
       }
 
-      const data = await response.json()
-      console.log('✅ User created/updated successfully via API:', data.user.id)
-      
-      return data.user as User
+      console.log('📝 Creating user via direct database call:', {
+        wallet_address,
+        email,
+        oauth_provider
+      })
+
+      // Check if user already exists by wallet address or zklogin_sub
+      let query = supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('wallet_address', wallet_address)
+
+      if (zklogin_sub) {
+        query = supabaseAdmin
+          .from('users')
+          .select('*')
+          .or(`wallet_address.eq.${wallet_address},zklogin_sub.eq.${zklogin_sub}`)
+      }
+
+      const { data: existingUser, error: fetchError } = await query.maybeSingle()
+
+      if (fetchError) {
+        console.error('❌ Error fetching user:', fetchError)
+        return null
+      }
+
+      if (existingUser) {
+        // Update existing user
+        const updateData = {
+          email,
+          zklogin_sub,
+          oauth_provider,
+          salt_value,
+          max_epoch,
+          jwt_token,
+          profile_picture,
+          updated_at: new Date().toISOString()
+        }
+        
+        const { data: updatedUser, error: updateError } = await supabaseAdmin
+          .from('users')
+          .update(updateData)
+          .eq('id', existingUser.id)
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error('❌ Error updating user:', updateError)
+          return null
+        }
+
+        console.log('✅ User updated successfully:', updatedUser.id)
+        return updatedUser as User
+      } else {
+        // Create new user
+        const userData = {
+          wallet_address,
+          username: username || null,
+          email: email || null,
+          zklogin_sub: zklogin_sub || null,
+          oauth_provider: oauth_provider || null,
+          salt_value: salt_value || null,
+          max_epoch: max_epoch || null,
+          ephemeral_public_key: ephemeral_public_key || null,
+          jwt_token: jwt_token || null,
+          profile_picture: profile_picture || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+
+        const { data: newUser, error: createError } = await supabaseAdmin
+          .from('users')
+          .insert(userData)
+          .select()
+          .single()
+
+        if (createError) {
+          // Only log actual errors, not expected cases like duplicate keys
+          if (createError.code !== '23505' && createError.code !== '42501') {
+            console.error('❌ Error creating user:', createError)
+          }
+          return null
+        }
+
+        console.log('✅ User created successfully:', newUser.id)
+        return newUser as User
+      }
     } catch (error) {
       console.error('❌ Unexpected error in createOrUpdateZkLoginUser:', {
         error: error,
@@ -337,41 +444,28 @@ export class UserService {
     }
   }
 
-  // Get complete user profile with all related data
+  // Get complete user profile with all related data - Uses API route
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select(`
-          *,
-          social_connections (*),
-          reputation_scores (*),
-          identity_nfts (*),
-          user_badges (
-            *,
-            badge:badges (*)
-          ),
-          user_quest_progress (
-            *,
-            quest:quests (*)
-          )
-        `)
-        .eq('id', userId)
-        .single()
-
-      if (userError) {
-        console.error('❌ Error fetching user profile:', {
-          message: userError.message || 'Unknown profile fetch error',
-          code: userError.code || 'NO_CODE',
-          details: userError.details || 'No details available',
-          hint: userError.hint || 'No hint available',
-          userId: userId,
-          fullError: userError
-        })
+      // Skip if no userId provided
+      if (!userId) {
+        console.log('⚠️ No userId provided to getUserProfile')
         return null
       }
 
-      return user as UserProfile
+      const response = await fetch(`/api/users/${userId}`)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('👤 User profile not found for ID:', userId)
+        } else {
+          console.error('❌ API error fetching user profile:', response.status)
+        }
+        return null
+      }
+
+      const data = await response.json()
+      return data.profile as UserProfile
     } catch (error: any) {
       console.error('❌ Unexpected error in getUserProfile:', {
         message: error.message || 'Unknown error',
@@ -383,29 +477,25 @@ export class UserService {
     }
   }
 
-  // Update user profile information
+  // Update user profile information - Uses API route
   static async updateUserProfile(userId: string, updates: Partial<User>): Promise<User | null> {
     try {
-      const updateData = {
-        ...updates,
-        updated_at: new Date().toISOString()
-      }
-      const { data: updatedUser, error } = await (supabase
-        .from('users') as any)
-        .update(updateData)
-        .eq('id', userId)
-        .select()
-        .single()
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      })
 
-      if (error) {
-        logError('❌ Error updating user profile:', error, {
-          userId: userId,
-          updateData: updateData
-        })
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('❌ API error updating user profile:', errorData.error)
         return null
       }
 
-      return updatedUser
+      const data = await response.json()
+      return data.user as User
     } catch (error: any) {
       console.error('❌ Unexpected error in updateUserProfile:', {
         message: error.message || 'Unknown error',
@@ -418,40 +508,33 @@ export class UserService {
     }
   }
 
-  // Check if username is available
+  // Check if username is available - Uses API route
   static async isUsernameAvailable(username: string, excludeUserId?: string): Promise<boolean> {
     try {
-      if (!isSupabaseConfigured()) {
-        console.warn('⚠️ Supabase is not properly configured. Using fallback validation.')
-        // Fallback: Allow any valid username when DB is not configured
-        return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username)
+      // Basic validation first
+      if (!username || username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        return false
       }
-      
-      let query = supabase
-        .from('users')
-        .select('id')
-        .eq('username', username.toLowerCase())
 
+      const params = new URLSearchParams({ username: username.toLowerCase() })
       if (excludeUserId) {
-        query = query.neq('id', excludeUserId)
+        params.append('excludeUserId', excludeUserId)
       }
 
-      const { data, error } = await query
-
-      if (error) {
-        logError('❌ Error checking username availability:', error, {
-          username: username,
-          excludeUserId: excludeUserId
-        })
-        // Fallback: Allow valid usernames if DB query fails
-        return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username)
+      const response = await fetch(`/api/users/username-available?${params}`)
+      
+      if (!response.ok) {
+        console.error('❌ API error checking username availability:', response.status)
+        // Fallback: Allow valid usernames if API fails
+        return true
       }
 
-      return data.length === 0
+      const data = await response.json()
+      return data.available
     } catch (error) {
       console.error('Error in isUsernameAvailable:', error)
       // Fallback: Allow valid usernames if function fails
-      return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username)
+      return true
     }
   }
 
@@ -576,51 +659,44 @@ export class SocialConnectionService {
     }
   ): Promise<SocialConnection | null> {
     try {
-      const upsertData = {
-        user_id: userId,
-        platform,
-        username: data.username,
-        profile_data: data.profileData || {},
-        verified: data.verified || false,
-        verified_at: data.verified ? new Date().toISOString() : null
-      }
-      const { data: connection, error } = await (supabase
-        .from('social_connections') as any)
-        .upsert(upsertData, {
-          onConflict: 'user_id,platform'
-        })
-        .select()
-        .single()
+      const response = await fetch(`/api/users/${userId}/social-connections`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          platform,
+          username: data.username,
+          profileData: data.profileData,
+          verified: data.verified
+        }),
+      })
 
-      if (error) {
-        console.error('Error upserting social connection:', error)
+      if (!response.ok) {
+        console.error('❌ API error upserting social connection:', response.status)
         return null
       }
 
-      return connection
+      const result = await response.json()
+      return result.connection
     } catch (error) {
       console.error('Error in upsertSocialConnection:', error)
       return null
     }
   }
 
-  // Get social connections for user
+  // Get social connections for user - Uses API route to avoid client-side database calls
   static async getUserSocialConnections(userId: string): Promise<SocialConnection[]> {
     try {
-      const { data: connections, error } = await supabase
-        .from('social_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        logError('❌ Error fetching social connections:', error, {
-          userId: userId
-        })
+      const response = await fetch(`/api/users/${userId}/social-connections`)
+      
+      if (!response.ok) {
+        console.error('❌ API error fetching social connections:', response.status)
         return []
       }
 
-      return connections
+      const data = await response.json()
+      return data.connections || []
     } catch (error: any) {
       console.error('❌ Unexpected error in getUserSocialConnections:', {
         message: error.message || 'Unknown error',
@@ -632,17 +708,15 @@ export class SocialConnectionService {
     }
   }
 
-  // Remove social connection
+  // Remove social connection - Uses API route
   static async removeSocialConnection(userId: string, platform: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('social_connections')
-        .delete()
-        .eq('user_id', userId)
-        .eq('platform', platform)
+      const response = await fetch(`/api/users/${userId}/social-connections?platform=${platform}`, {
+        method: 'DELETE',
+      })
 
-      if (error) {
-        console.error('Error removing social connection:', error)
+      if (!response.ok) {
+        console.error('❌ API error removing social connection:', response.status)
         return false
       }
 
@@ -660,8 +734,8 @@ export class SocialConnectionService {
         verified: true,
         verified_at: new Date().toISOString()
       }
-      const { error } = await (supabase
-        .from('social_connections') as any)
+      const { error } = await supabaseAdmin
+        .from('social_connections')
         .update(updateData)
         .eq('user_id', userId)
         .eq('platform', platform)

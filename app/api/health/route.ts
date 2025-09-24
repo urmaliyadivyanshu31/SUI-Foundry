@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, isSupabaseConfigured } from '@/lib/core/supabase'
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/core/supabase'
 import { SuiClient } from '@mysten/sui/client'
 
 const suiClient = new SuiClient({
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           }
         } else {
           // Test database connection
-          const { data, error } = await supabase
+          const { data, error } = await supabaseAdmin
             .from('users')
             .select('count')
             .limit(1)
