@@ -99,8 +99,8 @@ export function useUserProfile(): UseUserProfileReturn {
         const result = await UserService.createOrUpdateEnokiUserWithBlockchainData(zkLoginUserData)
         
         if (!result.user) {
-          console.warn('Failed to create/update user, using mock profile for demo')
-          // Return mock profile for development when DB is not available
+          // This is expected for new users - they'll complete setup in dashboard
+          // Return minimal profile without error logging
           return {
             id: generateMockUUID(),
             username: zkLoginUser.name || 'Anonymous',
@@ -173,15 +173,69 @@ export function useUserProfile(): UseUserProfileReturn {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (updates: Partial<User>) => {
-      if (!profile?.id) {
-        throw new Error('No user profile found - please ensure you are logged in')
+      if (!zkLoginUser) {
+        throw new Error('No authentication found - please log in again')
       }
       
-      console.log('🔄 Updating profile with data:', updates)
+      let userId = profile?.id
       
-      const updatedUser = await UserService.updateUserProfile(profile.id, updates)
+      // If no profile exists, create user first
+      if (!userId) {
+        console.log('🔄 No profile found, creating user first...')
+        console.log('📍 zkLoginUser data:', {
+          walletAddress: zkLoginUser.walletAddress,
+          email: zkLoginUser.email,
+          name: zkLoginUser.name,
+          provider: zkLoginUser.provider,
+          sub: zkLoginUser.sub
+        })
+        
+        const zkLoginUserData = {
+          walletAddress: zkLoginUser.walletAddress,
+          email: zkLoginUser.email,
+          name: zkLoginUser.name,
+          picture: zkLoginUser.picture,
+          provider: zkLoginUser.provider || 'google',
+          sub: zkLoginUser.sub || zkLoginUser.email
+        }
+        
+        console.log('🚀 Calling createOrUpdateEnokiUserWithBlockchainData...')
+        const result = await UserService.createOrUpdateEnokiUserWithBlockchainData(zkLoginUserData)
+        console.log('📦 Create result:', JSON.stringify(result, null, 2))
+        
+        if (!result || !result.user) {
+          console.error('❌ User creation failed:', result)
+          throw new Error('Failed to create user profile - database operation failed')
+        }
+        
+        userId = result.user.id
+        console.log('✅ User created with ID:', userId)
+        console.log('🔍 Profile data before invalidation:', {
+          currentProfileId: profile?.id,
+          newUserId: userId,
+          profileExists: !!profile
+        })
+        
+        // Refresh the profile query to get the new user
+        await queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+      }
+      
+      if (!userId) {
+        throw new Error('No user ID available after creation attempt')
+      }
+      
+      console.log('🔄 Updating profile with ID:', userId, 'and data:', updates)
+      console.log('🔍 Current profile state before update:', {
+        profileId: profile?.id,
+        userIdToUpdate: userId,
+        profileIsNull: profile === null,
+        profileUndefined: profile === undefined
+      })
+      
+      const updatedUser = await UserService.updateUserProfile(userId, updates)
       if (!updatedUser) {
-        throw new Error('Failed to update profile - database operation failed')
+        console.error('❌ Profile update failed for user ID:', userId)
+        throw new Error('Failed to update profile - user may not exist in database')
       }
       
       console.log('✅ Profile updated successfully:', updatedUser)
