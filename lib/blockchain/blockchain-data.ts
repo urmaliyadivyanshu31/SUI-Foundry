@@ -1,5 +1,3 @@
-'use client'
-
 import { SuiClient } from '@mysten/sui/client'
 import { 
   WalletBalance, 
@@ -10,12 +8,17 @@ import {
   BlockchainDataFetcher 
 } from '@/types'
 
-// Sui client configuration
-const suiClient = new SuiClient({
-  url: process.env.NEXT_PUBLIC_SUI_NETWORK === 'mainnet' 
-    ? 'https://fullnode.mainnet.sui.io:443'
-    : 'https://fullnode.testnet.sui.io:443'
+// Sui client configuration for multiple networks
+const suiClientMainnet = new SuiClient({
+  url: 'https://fullnode.mainnet.sui.io:443'
 })
+
+const suiClientTestnet = new SuiClient({
+  url: 'https://fullnode.testnet.sui.io:443'
+})
+
+// Default client based on environment
+const suiClient = process.env.NEXT_PUBLIC_SUI_NETWORK === 'mainnet' ? suiClientMainnet : suiClientTestnet
 
 // Known token types and their metadata
 const KNOWN_TOKENS = {
@@ -51,6 +54,11 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
   private readonly maxRetries = 3
   private readonly retryDelay = 1000 // 1 second
   private readonly requestTimeout = 30000 // 30 seconds
+
+  // Get client for specific network
+  private getClient(network: 'mainnet' | 'testnet'): SuiClient {
+    return network === 'mainnet' ? suiClientMainnet : suiClientTestnet
+  }
 
   // Enhanced error handling and retry logic
   private async executeWithRetry<T>(
@@ -107,7 +115,10 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
            error.message?.includes('too many requests')
   }
 
-  async getUserBalance(address: string): Promise<WalletBalance[]> {
+  // Fetch balance from specific network
+  async getUserBalanceFromNetwork(address: string, network: 'mainnet' | 'testnet'): Promise<WalletBalance[]> {
+    const client = this.getClient(network)
+    
     return this.executeWithRetry(async () => {
       if (!this.isValidAddress(address)) {
         throw new Error(`Invalid Sui address: ${address}`)
@@ -115,58 +126,138 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
 
       const balances: WalletBalance[] = []
       
-      // Get all coin balances with error handling
-      const coinBalances = await suiClient.getAllBalances({
-        owner: address
+      // Use suix_getOwnedObjects to get all coin objects for more detailed balance info
+      const ownedObjects = await client.getOwnedObjects({
+        owner: address,
+        filter: {
+          StructType: '0x2::coin::Coin'
+        },
+        options: {
+          showType: true,
+          showContent: true,
+          showOwner: true
+        }
       })
 
-      if (!coinBalances || !Array.isArray(coinBalances)) {
-        console.warn(`No balance data returned for address: ${address}`)
-        return []
+      // Process each coin object to get detailed balance information
+      for (const objRef of ownedObjects.data) {
+        if (objRef.data?.content?.dataType === 'moveObject') {
+          const content = objRef.data.content
+          const coinType = this.extractCoinType(content.type)
+          const balance = content.fields?.balance
+          
+          if (balance && coinType) {
+            const tokenInfo = KNOWN_TOKENS[coinType as keyof typeof KNOWN_TOKENS]
+            const symbol = tokenInfo?.symbol || this.extractTokenSymbol(coinType)
+            const decimals = tokenInfo?.decimals || 9
+            
+            const humanBalance = parseInt(balance.toString()) / Math.pow(10, decimals)
+            
+            // Get USD price with error handling
+            let balanceUsd: number | undefined
+            try {
+              balanceUsd = await this.getTokenPriceUSD(coinType, humanBalance)
+            } catch (priceError) {
+              console.warn(`Failed to get USD price for ${coinType}:`, priceError)
+              balanceUsd = undefined
+            }
+
+            balances.push({
+              id: `${address}_${coinType}_${network}`,
+              user_id: '',
+              wallet_address: address,
+              token_type: coinType,
+              token_symbol: symbol,
+              balance: humanBalance,
+              balance_usd: balanceUsd,
+              last_updated: new Date().toISOString(),
+              network // Add network identifier
+            })
+          }
+        }
       }
 
-      for (const balance of coinBalances) {
-        try {
-          const tokenInfo = KNOWN_TOKENS[balance.coinType as keyof typeof KNOWN_TOKENS]
-          const symbol = tokenInfo?.symbol || this.extractTokenSymbol(balance.coinType)
-          const decimals = tokenInfo?.decimals || 9
-          
-          // Validate balance data
-          if (!balance.totalBalance || isNaN(parseInt(balance.totalBalance))) {
-            console.warn(`Invalid balance data for ${balance.coinType}:`, balance)
-            continue
-          }
-          
-          // Convert balance to human readable format
-          const humanBalance = parseInt(balance.totalBalance) / Math.pow(10, decimals)
-          
-          // Get USD price with error handling
-          let balanceUsd: number | undefined
-          try {
-            balanceUsd = await this.getTokenPriceUSD(balance.coinType, humanBalance)
-          } catch (priceError) {
-            console.warn(`Failed to get USD price for ${balance.coinType}:`, priceError)
-            balanceUsd = undefined
-          }
+      // Fallback to getAllBalances if no objects found
+      if (balances.length === 0) {
+        const coinBalances = await client.getAllBalances({
+          owner: address
+        })
 
-          balances.push({
-            id: `${address}_${balance.coinType}`,
-            user_id: '', // Will be set by the calling function
-            wallet_address: address,
-            token_type: balance.coinType,
-            token_symbol: symbol,
-            balance: humanBalance,
-            balance_usd: balanceUsd,
-            last_updated: new Date().toISOString()
-          })
-        } catch (balanceError) {
-          console.warn(`Failed to process balance for ${balance.coinType}:`, balanceError)
-          continue
+        if (coinBalances && Array.isArray(coinBalances)) {
+          for (const balance of coinBalances) {
+            try {
+              const tokenInfo = KNOWN_TOKENS[balance.coinType as keyof typeof KNOWN_TOKENS]
+              const symbol = tokenInfo?.symbol || this.extractTokenSymbol(balance.coinType)
+              const decimals = tokenInfo?.decimals || 9
+              
+              if (balance.totalBalance && !isNaN(parseInt(balance.totalBalance))) {
+                const humanBalance = parseInt(balance.totalBalance) / Math.pow(10, decimals)
+                
+                let balanceUsd: number | undefined
+                try {
+                  balanceUsd = await this.getTokenPriceUSD(balance.coinType, humanBalance)
+                } catch (priceError) {
+                  console.warn(`Failed to get USD price for ${balance.coinType}:`, priceError)
+                  balanceUsd = undefined
+                }
+
+                balances.push({
+                  id: `${address}_${balance.coinType}_${network}`,
+                  user_id: '',
+                  wallet_address: address,
+                  token_type: balance.coinType,
+                  token_symbol: symbol,
+                  balance: humanBalance,
+                  balance_usd: balanceUsd,
+                  last_updated: new Date().toISOString(),
+                  network
+                })
+              }
+            } catch (balanceError) {
+              console.warn(`Failed to process balance for ${balance.coinType}:`, balanceError)
+              continue
+            }
+          }
         }
       }
 
       return balances
-    }, 'getUserBalance', [])
+    }, `getUserBalance-${network}`, [])
+  }
+
+  // Combined balance from both networks
+  async getUserBalance(address: string): Promise<WalletBalance[]> {
+    try {
+      console.log(`Fetching balances from both mainnet and testnet for ${address}`)
+      
+      // Fetch from both networks in parallel
+      const [mainnetBalances, testnetBalances] = await Promise.allSettled([
+        this.getUserBalanceFromNetwork(address, 'mainnet'),
+        this.getUserBalanceFromNetwork(address, 'testnet')
+      ])
+
+      // Combine results, handling failures gracefully
+      const allBalances: WalletBalance[] = []
+      
+      if (mainnetBalances.status === 'fulfilled') {
+        allBalances.push(...mainnetBalances.value)
+        console.log(`✅ Mainnet: Found ${mainnetBalances.value.length} balances`)
+      } else {
+        console.warn(`❌ Mainnet balance fetch failed:`, mainnetBalances.reason)
+      }
+      
+      if (testnetBalances.status === 'fulfilled') {
+        allBalances.push(...testnetBalances.value)
+        console.log(`✅ Testnet: Found ${testnetBalances.value.length} balances`)
+      } else {
+        console.warn(`❌ Testnet balance fetch failed:`, testnetBalances.reason)
+      }
+
+      return allBalances
+    } catch (error) {
+      console.error('Error fetching combined balances:', error)
+      throw error
+    }
   }
 
   private isValidAddress(address: string): boolean {
@@ -277,53 +368,101 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
     }
   }
 
-  async getUserNFTs(address: string): Promise<UserNFT[]> {
+  // Fetch NFTs from specific network
+  async getUserNFTsFromNetwork(address: string, network: 'mainnet' | 'testnet'): Promise<UserNFT[]> {
+    const client = this.getClient(network)
+    
     try {
       const nfts: UserNFT[] = []
       
-      // Get all objects owned by the address
-      const ownedObjects = await suiClient.getOwnedObjects({
+      // Get all non-coin objects owned by the address
+      const ownedObjects = await client.getOwnedObjects({
         owner: address,
-        filter: {
-          StructType: '0x2::display::Display'
-        },
         options: {
           showType: true,
           showContent: true,
-          showDisplay: true
+          showDisplay: true,
+          showOwner: true
         }
       })
 
-      for (const obj of ownedObjects.data) {
-        if (obj.data?.content?.dataType === 'moveObject') {
-          const display = obj.data.display?.data
-          const content = obj.data.content
+      // Filter out coin objects and process potential NFTs
+      for (const objRef of ownedObjects.data) {
+        if (objRef.data?.type && !objRef.data.type.includes('0x2::coin::Coin')) {
+          const obj = objRef.data
           
-          nfts.push({
-            id: obj.data.objectId,
-            user_id: '', // Will be set by the calling function
-            object_id: obj.data.objectId,
-            collection_name: display?.collection || this.extractCollectionName(content.type),
-            nft_name: display?.name || 'Unknown NFT',
-            description: display?.description,
-            image_url: display?.image_url,
-            creator_address: display?.creator,
-            owner_address: address,
-            nft_type: content.type,
-            attributes: this.parseNFTAttributes(display),
-            rarity_score: undefined,
-            floor_price: undefined,
-            last_sale_price: undefined,
-            acquired_at: undefined,
-            last_updated: new Date().toISOString(),
-            is_owned: true
-          })
+          // Check if this looks like an NFT (has display data or is a known NFT pattern)
+          const isLikelyNFT = obj.display?.data || 
+                             obj.type?.includes('::nft::') || 
+                             obj.type?.includes('::NFT') ||
+                             this.hasNFTCharacteristics(obj)
+          
+          if (isLikelyNFT && obj.content?.dataType === 'moveObject') {
+            const display = obj.display?.data
+            const content = obj.content
+            
+            nfts.push({
+              id: `${obj.objectId}_${network}`,
+              user_id: '', // Will be set by the calling function
+              object_id: obj.objectId,
+              collection_name: display?.collection || this.extractCollectionName(obj.type),
+              nft_name: display?.name || this.extractObjectName(obj) || 'Unknown NFT',
+              description: display?.description,
+              image_url: display?.image_url || display?.img_url,
+              creator_address: display?.creator,
+              owner_address: address,
+              nft_type: obj.type,
+              attributes: this.parseNFTAttributes(display, content.fields),
+              rarity_score: undefined,
+              floor_price: undefined,
+              last_sale_price: undefined,
+              acquired_at: undefined,
+              last_updated: new Date().toISOString(),
+              is_owned: true,
+              network // Add network identifier
+            })
+          }
         }
       }
 
       return nfts
     } catch (error) {
-      console.error('Error fetching user NFTs:', error)
+      console.error(`Error fetching user NFTs from ${network}:`, error)
+      return []
+    }
+  }
+
+  // Combined NFTs from both networks
+  async getUserNFTs(address: string): Promise<UserNFT[]> {
+    try {
+      console.log(`Fetching NFTs from both mainnet and testnet for ${address}`)
+      
+      // Fetch from both networks in parallel
+      const [mainnetNFTs, testnetNFTs] = await Promise.allSettled([
+        this.getUserNFTsFromNetwork(address, 'mainnet'),
+        this.getUserNFTsFromNetwork(address, 'testnet')
+      ])
+
+      // Combine results, handling failures gracefully
+      const allNFTs: UserNFT[] = []
+      
+      if (mainnetNFTs.status === 'fulfilled') {
+        allNFTs.push(...mainnetNFTs.value)
+        console.log(`✅ Mainnet: Found ${mainnetNFTs.value.length} NFTs`)
+      } else {
+        console.warn(`❌ Mainnet NFT fetch failed:`, mainnetNFTs.reason)
+      }
+      
+      if (testnetNFTs.status === 'fulfilled') {
+        allNFTs.push(...testnetNFTs.value)
+        console.log(`✅ Testnet: Found ${testnetNFTs.value.length} NFTs`)
+      } else {
+        console.warn(`❌ Testnet NFT fetch failed:`, testnetNFTs.reason)
+      }
+
+      return allNFTs
+    } catch (error) {
+      console.error('Error fetching combined NFTs:', error)
       return []
     }
   }
@@ -403,18 +542,47 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
   }
 
   // Helper methods
+  private extractCoinType(fullType: string): string | null {
+    // Extract coin type from "0x2::coin::Coin<TOKEN_TYPE>" format
+    const match = fullType.match(/0x2::coin::Coin<(.+)>/)
+    return match ? match[1] : null
+  }
+
   private extractTokenSymbol(tokenType: string): string {
     const parts = tokenType.split('::')
     return parts[parts.length - 1].toUpperCase()
   }
 
   private async getTokenPriceUSD(tokenType: string, amount: number): Promise<number | undefined> {
-    // Simplified price fetching - in production, use a real price API
-    if (tokenType === '0x2::sui::SUI') {
-      // Mock SUI price - in production, fetch from CoinGecko or similar
-      return amount * 2.5 // Placeholder $2.5 per SUI
+    try {
+      if (tokenType === '0x2::sui::SUI') {
+        // Fetch real SUI price from CoinGecko API
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=sui&vs_currencies=usd', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        })
+        
+        if (!response.ok) {
+          console.warn('Failed to fetch SUI price from CoinGecko, using fallback')
+          return amount * 2.0 // Fallback price if API fails
+        }
+        
+        const data = await response.json()
+        const suiPrice = data.sui?.usd
+        
+        if (typeof suiPrice === 'number') {
+          return amount * suiPrice
+        }
+      }
+      
+      // For other tokens, could add more price sources here
+      return undefined
+    } catch (error) {
+      console.warn('Error fetching token price:', error)
+      return amount * 2.0 // Fallback price
     }
-    return undefined
   }
 
   private determineTransactionType(tx: any, userAddress: string): WalletTransaction['transaction_type'] {
@@ -448,21 +616,50 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
     return gasPayment?.[0]?.owner?.AddressOwner
   }
 
+  private hasNFTCharacteristics(obj: any): boolean {
+    // Check if object has characteristics typical of NFTs
+    if (!obj.content?.fields) return false
+    
+    const fields = obj.content.fields
+    // Look for common NFT field patterns
+    return !!(fields.name || fields.description || fields.image_url || 
+              fields.url || fields.attributes || fields.metadata)
+  }
+
+  private extractObjectName(obj: any): string | undefined {
+    const fields = obj.content?.fields
+    if (!fields) return undefined
+    
+    return fields.name || fields.title || fields.label
+  }
+
   private extractCollectionName(nftType: string): string {
     const parts = nftType.split('::')
     return parts[1] || 'Unknown Collection'
   }
 
-  private parseNFTAttributes(display: any): any {
-    // Parse NFT attributes from display data
+  private parseNFTAttributes(display: any, fields?: any): any {
+    // Parse NFT attributes from display data and content fields
     const attributes: any = {}
+    
+    // Parse display attributes
     if (display) {
       Object.keys(display).forEach(key => {
-        if (!['name', 'description', 'image_url', 'creator'].includes(key)) {
+        if (!['name', 'description', 'image_url', 'img_url', 'creator', 'collection'].includes(key)) {
           attributes[key] = display[key]
         }
       })
     }
+    
+    // Parse content field attributes
+    if (fields) {
+      Object.keys(fields).forEach(key => {
+        if (!['id', 'name', 'description', 'image_url'].includes(key)) {
+          attributes[key] = fields[key]
+        }
+      })
+    }
+    
     return attributes
   }
 
@@ -500,7 +697,7 @@ class SuiBlockchainDataFetcher implements BlockchainDataFetcher {
 
   private async calculateVolumeUSD(tx: WalletTransaction): Promise<number | undefined> {
     if (tx.amount && tx.token_type === '0x2::sui::SUI') {
-      return tx.amount * 2.5 // Simplified USD calculation
+      return this.getTokenPriceUSD('0x2::sui::SUI', tx.amount)
     }
     return undefined
   }

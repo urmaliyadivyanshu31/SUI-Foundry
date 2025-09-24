@@ -213,11 +213,7 @@ export default function LandingPage() {
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#features" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/leaderboard"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -235,15 +231,11 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              FEATURES
+              LEADERBOARD
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#usecases" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('usecases')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/quests"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -261,15 +253,11 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              USE CASES
+              QUESTS
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#contact" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/jobs"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -287,7 +275,7 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              CONTACT
+              TALENT
             </a>
           </div>
 
@@ -692,40 +680,6 @@ export default function LandingPage() {
                   zIndex: 1
                 }} />
 
-                {/* Vertical Rings - Simple approach */}
-                <div style={{
-                  position: 'absolute',
-                  width: '580px',
-                  height: '580px',
-                  zIndex: 2,
-                  pointerEvents: 'none'
-                }}>
-                  {/* Vertical Outer Ring - Flattened ellipse to simulate vertical */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '580px',
-                    height: '120px',
-                    border: '2px solid rgba(147, 51, 234, 0.4)',
-                    borderRadius: '50%',
-                    top: '230px',
-                    left: '0',
-                    animation: 'verticalOuterRing 30s linear infinite',
-                    filter: 'drop-shadow(0 0 8px rgba(147, 51, 234, 0.4))'
-                  }} />
-                  
-                  {/* Vertical Inner Ring - Flattened ellipse to simulate vertical */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '540px',
-                    height: '100px',
-                    border: '1px solid rgba(192, 132, 252, 0.3)',
-                    borderRadius: '50%',
-                    top: '240px',
-                    left: '20px',
-                    animation: 'verticalInnerRing 40s linear infinite reverse',
-                    filter: 'drop-shadow(0 0 6px rgba(192, 132, 252, 0.3))'
-                  }} />
-                </div>
 
                 {/* Collision Burst Effects */}
                 <div style={{
@@ -1587,34 +1541,6 @@ export default function LandingPage() {
           }
         }
 
-        /* Vertical Rings - Simple rotation of flattened ellipses */
-        @keyframes verticalOuterRing {
-          0% {
-            transform: rotate(0deg);
-            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
-          }
-          50% {
-            filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6));
-          }
-          100% {
-            transform: rotate(360deg);
-            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
-          }
-        }
-
-        @keyframes verticalInnerRing {
-          0% {
-            transform: rotate(0deg);
-            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
-          }
-          50% {
-            filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
-          }
-          100% {
-            transform: rotate(360deg);
-            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
-          }
-        }
 
         /* Collision Burst Effects */
         @keyframes collisionBurst1 {

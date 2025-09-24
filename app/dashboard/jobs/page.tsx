@@ -554,7 +554,7 @@ export default function JobBoardPage() {
               href="/dashboard/jobs" 
               style={{...styles.navLink, ...styles.navLinkActive}}
             >
-              JOBS
+              TALENT
             </Link>
 
             <Link 
