@@ -125,6 +125,85 @@ const CornerBrackets = ({ size = 20, opacity = 0.3 }: { size?: number, opacity?:
   </div>
 )
 
+// Infinity loader component
+const InfinityLoader = () => (
+  <div style={styles.infinityLoader}>
+    <svg
+      width="80"
+      height="40"
+      viewBox="0 0 80 40"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="infinityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style={{ stopColor: '#7c3aed', stopOpacity: 1 }} />
+          <stop offset="50%" style={{ stopColor: '#c084fc', stopOpacity: 1 }} />
+          <stop offset="100%" style={{ stopColor: '#a855f7', stopOpacity: 1 }} />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      {/* Main infinity path */}
+      <motion.path
+        d="M20,20 C20,10 30,10 40,20 C50,30 60,30 60,20 C60,10 50,10 40,20 C30,30 20,30 20,20 Z"
+        fill="none"
+        stroke="url(#infinityGradient)"
+        strokeWidth="3"
+        filter="url(#glow)"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{
+          pathLength: { duration: 2, ease: "easeInOut", repeat: Infinity },
+          opacity: { duration: 0.5 }
+        }}
+      />
+      
+      {/* Moving particle */}
+      <motion.circle
+        cx="20"
+        cy="20"
+        r="3"
+        fill="#c084fc"
+        filter="url(#glow)"
+        animate={{
+          x: [0, 20, 40, 20, 0],
+          y: [0, -10, 0, 10, 0]
+        }}
+        transition={{
+          duration: 2,
+          ease: "easeInOut",
+          repeat: Infinity
+        }}
+      />
+      
+      {/* Second moving particle (opposite direction) */}
+      <motion.circle
+        cx="60"
+        cy="20"
+        r="2"
+        fill="#a855f7"
+        filter="url(#glow)"
+        animate={{
+          x: [0, -20, -40, -20, 0],
+          y: [0, 10, 0, -10, 0]
+        }}
+        transition={{
+          duration: 2,
+          ease: "easeInOut",
+          repeat: Infinity,
+          delay: 1
+        }}
+      />
+    </svg>
+  </div>
+)
+
 // Floating particles background
 const FloatingParticles = () => {
   const particles = Array.from({ length: 20 }, (_, i) => ({
@@ -472,11 +551,29 @@ const styles = {
     zIndex: 1000
   },
 
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '6rem 2rem',
+    gap: '2rem'
+  },
+
+  infinityLoader: {
+    width: '80px',
+    height: '40px',
+    position: 'relative' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
   loadingText: {
-    textAlign: 'center' as const,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: '1.1rem',
-    padding: '3rem'
+    fontWeight: '500',
+    letterSpacing: '0.5px'
   }
 }
 
@@ -708,9 +805,17 @@ export default function DashboardJobsPage() {
 
         {/* Jobs Grid */}
         {loading ? (
-          <div style={styles.loadingText}>
-            Loading opportunities...
-          </div>
+          <motion.div 
+            style={styles.loadingContainer}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <InfinityLoader />
+            <div style={styles.loadingText}>
+              Loading opportunities...
+            </div>
+          </motion.div>
         ) : (
           <motion.div 
             style={styles.jobsGrid}
@@ -799,9 +904,31 @@ export default function DashboardJobsPage() {
         )}
 
         {filteredJobs.length === 0 && !loading && (
-          <div style={styles.loadingText}>
-            No jobs match your search criteria.
-          </div>
+          <motion.div 
+            style={styles.loadingContainer}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div style={{
+              ...styles.infinityLoader,
+              opacity: 0.3,
+              transform: 'scale(0.8)'
+            }}>
+              <Briefcase size={48} color="rgba(192, 132, 252, 0.5)" />
+            </div>
+            <div style={styles.loadingText}>
+              No opportunities match your search criteria
+            </div>
+            <div style={{
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: '0.9rem',
+              textAlign: 'center' as const,
+              maxWidth: '400px'
+            }}>
+              Try adjusting your filters or search terms to discover more blockchain and Web3 career opportunities.
+            </div>
+          </motion.div>
         )}
       </div>
 
