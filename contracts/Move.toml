@@ -4,9 +4,10 @@ version = "1.0.0"
 edition = "2024.beta"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet-v1.36.2" }
 
 [addresses]
 suidentity = "0x0"
+reputation = "0x0"
 
 [dev-dependencies]

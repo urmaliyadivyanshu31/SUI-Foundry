@@ -7,7 +7,7 @@ import { Transaction } from '@mysten/sui/transactions'
 import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { useZkLogin } from '@/lib/providers'
 import { blockchainDataFetcher, getCompleteUserData } from '@/lib/blockchain/blockchain-data'
-import { normalizeAddress } from '@mysten/sui/utils'
+import { normalizeSuiAddress } from '@mysten/sui/utils'
 
 interface WalletBalance {
   sui: number

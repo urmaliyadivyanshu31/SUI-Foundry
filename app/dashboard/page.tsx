@@ -18,6 +18,9 @@ import {
   Copy
 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
+import { mintUserReputationCard } from '@/lib/blockchain/smart-contracts'
+import { useSuiWallet } from '@/hooks/useSuiWallet'
 
 // AI Chat Modal Component
 const AiChatModal = ({ 
@@ -1186,7 +1189,9 @@ export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useZkLogin()
   const { profile, socialConnections, isLoading: isProfileLoading, refreshProfile } = useUserProfile()
+  const { signAndExecuteTransaction } = useSuiWallet()
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+  const [isMinting, setIsMinting] = useState(false)
 
   // Check for GitHub connection success and refresh data
   useEffect(() => {
@@ -1230,6 +1235,82 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('❌ Failed to trigger GitHub analysis:', error)
     }
+  }
+
+  // Function to handle mint profile button click - Direct minting
+  const handleMintProfile = async () => {
+    // Check prerequisites
+    if (!socialConnections || socialConnections.length < 1) {
+      toast.error('Please connect at least one social account before minting your profile NFT')
+      return
+    }
+
+    if (!profile?.username) {
+      toast.error('Please complete your profile setup first')
+      return
+    }
+
+    if (isMinting) {
+      return // Prevent double-clicking
+    }
+
+    setIsMinting(true)
+    
+    try {
+      // Show progressive toast notifications
+      toast.info('🔄 Preparing to mint your identity NFT...')
+      
+      // Build NFT metadata from user profile
+      const nftName = `${profile.username} Identity Card`
+      const profileImage = profile.profile_picture || '/default-avatar.png'
+      const description = `SuiDentity Reputation Card for ${profile.username}`
+      
+      // Build social links from connections
+      const socialLinks: Record<string, string> = {}
+      socialConnections.forEach(connection => {
+        if (connection.platform && connection.username) {
+          socialLinks[connection.platform] = connection.username
+        }
+      })
+      
+      // Build tags from profile data
+      const tags = ['suidentity', 'reputation', profile.username]
+      if (socialConnections.find(c => c.platform === 'github')) {
+        tags.push('developer')
+      }
+      
+      toast.info('⚡ Minting your identity NFT...')
+      
+      // Execute the mint transaction
+      const result = await mintUserReputationCard(
+        nftName,
+        profileImage,
+        description,
+        tags,
+        socialLinks,
+        signAndExecuteTransaction
+      )
+      
+      if (result.success) {
+        toast.success('✅ Successfully minted your identity NFT!')
+        // Refresh profile to show new NFT
+        refreshProfile()
+      } else {
+        toast.error(`❌ Failed to mint NFT: ${result.error}`)
+      }
+      
+    } catch (error) {
+      console.error('Mint error:', error)
+      toast.error('❌ Failed to mint NFT. Please try again.')
+    } finally {
+      setIsMinting(false)
+    }
+  }
+
+  // Placeholder function for GitHub connection
+  const connectGitHub = () => {
+    toast.info('GitHub connection coming soon!')
+    // TODO: Implement GitHub OAuth connection
   }
 
   // Redirect to setup if not authenticated or no username
@@ -2127,44 +2208,42 @@ export default function DashboardPage() {
             borderTop: '1px solid rgba(255, 255, 255, 0.1)'
           }}>
             <button
-              onClick={() => {
-                console.log('Mint profile clicked')
-              }}
-              disabled={!socialConnections || socialConnections.length < 1}
+              onClick={handleMintProfile}
+              disabled={!socialConnections || socialConnections.length < 1 || isMinting}
               style={{
-                background: socialConnections && socialConnections.length >= 1 
+                background: socialConnections && socialConnections.length >= 1 && !isMinting
                   ? 'rgba(147, 51, 234, 0.2)' 
                   : 'rgba(100, 100, 100, 0.1)',
-                border: socialConnections && socialConnections.length >= 1 
+                border: socialConnections && socialConnections.length >= 1 && !isMinting
                   ? '1px solid rgba(147, 51, 234, 0.4)' 
                   : '1px solid rgba(100, 100, 100, 0.2)',
                 borderRadius: '0px',
                 padding: '12px 24px',
-                color: socialConnections && socialConnections.length >= 1 
+                color: socialConnections && socialConnections.length >= 1 && !isMinting
                   ? '#c084fc' 
                   : '#666666',
                 fontSize: '11px',
                 fontWeight: '600',
-                cursor: socialConnections && socialConnections.length >= 1 ? 'pointer' : 'not-allowed',
+                cursor: socialConnections && socialConnections.length >= 1 && !isMinting ? 'pointer' : 'not-allowed',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
                 transition: 'all 0.2s ease',
-                opacity: socialConnections && socialConnections.length >= 1 ? 1 : 0.5
+                opacity: socialConnections && socialConnections.length >= 1 && !isMinting ? 1 : 0.5
               }}
               onMouseEnter={(e) => {
-                if (socialConnections && socialConnections.length >= 1) {
+                if (socialConnections && socialConnections.length >= 1 && !isMinting) {
                   e.currentTarget.style.background = 'rgba(147, 51, 234, 0.3)'
                   e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.6)'
                 }
               }}
               onMouseLeave={(e) => {
-                if (socialConnections && socialConnections.length >= 1) {
+                if (socialConnections && socialConnections.length >= 1 && !isMinting) {
                   e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)'
                   e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.4)'
                 }
               }}
             >
-              MINT YOUR PROFILE
+              {isMinting ? 'MINTING...' : 'MINT YOUR PROFILE'}
             </button>
             
             <button
