@@ -669,12 +669,308 @@ export default function LandingPage() {
                 alignItems: 'center',
                 marginRight: '80px'
               }}>
+                
+                {/* Outer Boundary Ring - Contains all effects */}
+                <div style={{
+                  position: 'absolute',
+                  width: '580px',
+                  height: '580px',
+                  border: '2px solid rgba(147, 51, 234, 0.4)',
+                  borderRadius: '50%',
+                  animation: 'outerRing 25s linear infinite',
+                  zIndex: 1
+                }} />
+                
+                {/* Inner Boundary Ring */}
+                <div style={{
+                  position: 'absolute',
+                  width: '540px',
+                  height: '540px',
+                  border: '1px solid rgba(192, 132, 252, 0.3)',
+                  borderRadius: '50%',
+                  animation: 'innerRing 35s linear infinite reverse',
+                  zIndex: 1
+                }} />
+
+                {/* Glow Points on Globe Surface */}
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  {/* Glow Point 1 - North */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '12px',
+                    height: '12px',
+                    background: 'radial-gradient(circle, rgba(147, 51, 234, 1) 0%, rgba(147, 51, 234, 0.3) 70%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '8%',
+                    left: '48%',
+                    animation: 'glowPoint1 3s ease-in-out infinite',
+                    boxShadow: '0 0 20px rgba(147, 51, 234, 0.8), 0 0 40px rgba(147, 51, 234, 0.4)',
+                    zIndex: 10
+                  }} />
+                  
+                  {/* Glow Point 2 - South */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '10px',
+                    height: '10px',
+                    background: 'radial-gradient(circle, rgba(192, 132, 252, 1) 0%, rgba(192, 132, 252, 0.3) 70%, transparent 100%)',
+                    borderRadius: '50%',
+                    bottom: '12%',
+                    right: '30%',
+                    animation: 'glowPoint2 4s ease-in-out infinite',
+                    boxShadow: '0 0 18px rgba(192, 132, 252, 0.8), 0 0 35px rgba(192, 132, 252, 0.4)',
+                    zIndex: 10
+                  }} />
+                  
+                  {/* Glow Point 3 - East */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '14px',
+                    height: '14px',
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 70%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '45%',
+                    right: '8%',
+                    animation: 'glowPoint3 3.5s ease-in-out infinite',
+                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.7), 0 0 45px rgba(255, 255, 255, 0.3)',
+                    zIndex: 10
+                  }} />
+                  
+                  {/* Glow Point 4 - West */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '11px',
+                    height: '11px',
+                    background: 'radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0.3) 70%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '30%',
+                    left: '10%',
+                    animation: 'glowPoint4 2.8s ease-in-out infinite',
+                    boxShadow: '0 0 22px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4)',
+                    zIndex: 10
+                  }} />
+                </div>
+
+                {/* Collision Lines - Connect Glow Points */}
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  zIndex: 4,
+                  pointerEvents: 'none'
+                }}>
+                  {/* Line 1: North to South */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '2px',
+                    height: '250px',
+                    background: 'linear-gradient(180deg, rgba(147, 51, 234, 0.8), rgba(147, 51, 234, 0.2), rgba(192, 132, 252, 0.8))',
+                    top: '15%',
+                    left: '48%',
+                    animation: 'collisionLine1 6s ease-in-out infinite',
+                    transformOrigin: 'center',
+                    borderRadius: '1px'
+                  }} />
+                  
+                  {/* Line 2: East to West */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '280px',
+                    height: '2px',
+                    background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.8), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8))',
+                    top: '45%',
+                    left: '12%',
+                    animation: 'collisionLine2 7s ease-in-out infinite',
+                    transformOrigin: 'center',
+                    borderRadius: '1px'
+                  }} />
+                  
+                  {/* Line 3: Diagonal Cross */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '2px',
+                    height: '200px',
+                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.6), rgba(168, 85, 247, 0.3), rgba(255, 255, 255, 0.6))',
+                    top: '20%',
+                    left: '35%',
+                    animation: 'collisionLine3 5s ease-in-out infinite',
+                    transform: 'rotate(45deg)',
+                    transformOrigin: 'center',
+                    borderRadius: '1px'
+                  }} />
+                </div>
+
+                {/* Asteroid-like Particles */}
+                <div style={{
+                  position: 'absolute',
+                  width: '580px',
+                  height: '580px',
+                  zIndex: 3,
+                  pointerEvents: 'none'
+                }}>
+                  {/* Asteroid 1 - Large */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '8px',
+                    height: '8px',
+                    background: 'linear-gradient(45deg, rgba(147, 51, 234, 0.9), rgba(192, 132, 252, 0.7))',
+                    borderRadius: '50%',
+                    animation: 'asteroid1 12s linear infinite',
+                    boxShadow: '0 0 15px rgba(147, 51, 234, 0.6), 0 0 25px rgba(147, 51, 234, 0.3)',
+                    zIndex: 8
+                  }}>
+                    {/* Asteroid trail */}
+                    <div style={{
+                      position: 'absolute',
+                      width: '20px',
+                      height: '2px',
+                      background: 'linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.4), transparent)',
+                      top: '3px',
+                      left: '-20px',
+                      borderRadius: '1px'
+                    }} />
+                  </div>
+                  
+                  {/* Asteroid 2 - Medium */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '6px',
+                    height: '6px',
+                    background: 'linear-gradient(45deg, rgba(255, 255, 255, 0.8), rgba(192, 132, 252, 0.6))',
+                    borderRadius: '50%',
+                    animation: 'asteroid2 8s linear infinite',
+                    boxShadow: '0 0 12px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.2)',
+                    zIndex: 8
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      width: '15px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                      top: '2.5px',
+                      left: '-15px',
+                      borderRadius: '0.5px'
+                    }} />
+                  </div>
+                  
+                  {/* Asteroid 3 - Small */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '4px',
+                    height: '4px',
+                    background: 'linear-gradient(45deg, rgba(168, 85, 247, 0.9), rgba(147, 51, 234, 0.7))',
+                    borderRadius: '50%',
+                    animation: 'asteroid3 15s linear infinite',
+                    boxShadow: '0 0 10px rgba(168, 85, 247, 0.6), 0 0 18px rgba(168, 85, 247, 0.3)',
+                    zIndex: 8
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      width: '12px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.4), transparent)',
+                      top: '1.5px',
+                      left: '-12px',
+                      borderRadius: '0.5px'
+                    }} />
+                  </div>
+                  
+                  {/* Asteroid 4 - Fast */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '5px',
+                    height: '5px',
+                    background: 'linear-gradient(45deg, rgba(192, 132, 252, 0.9), rgba(147, 51, 234, 0.8))',
+                    borderRadius: '50%',
+                    animation: 'asteroid4 6s linear infinite',
+                    boxShadow: '0 0 12px rgba(192, 132, 252, 0.7), 0 0 22px rgba(192, 132, 252, 0.3)',
+                    zIndex: 8
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      width: '18px',
+                      height: '1px',
+                      background: 'linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.5), transparent)',
+                      top: '2px',
+                      left: '-18px',
+                      borderRadius: '0.5px'
+                    }} />
+                  </div>
+                </div>
+
+                {/* Collision Burst Effects */}
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  zIndex: 6,
+                  pointerEvents: 'none'
+                }}>
+                  {/* Burst 1 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '30px',
+                    height: '30px',
+                    background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '25%',
+                    left: '35%',
+                    animation: 'collisionBurst1 4s ease-out infinite',
+                    opacity: 0
+                  }} />
+                  
+                  {/* Burst 2 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '25px',
+                    height: '25px',
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '60%',
+                    right: '25%',
+                    animation: 'collisionBurst2 3.5s ease-out infinite',
+                    opacity: 0
+                  }} />
+                  
+                  {/* Burst 3 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '20px',
+                    height: '20px',
+                    background: 'radial-gradient(circle, rgba(192, 132, 252, 0.8) 0%, rgba(192, 132, 252, 0.2) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    bottom: '30%',
+                    left: '20%',
+                    animation: 'collisionBurst3 5s ease-out infinite',
+                    opacity: 0
+                  }} />
+                </div>
+
+                {/* Intense Pulsing Glow Effect */}
+                <div style={{
+                  position: 'absolute',
+                  width: '520px',
+                  height: '520px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(147, 51, 234, 0.08) 40%, rgba(192, 132, 252, 0.05) 70%, transparent 100%)',
+                  animation: 'intensePulse 3s ease-in-out infinite',
+                  zIndex: 0
+                }} />
+
                 <div style={{ 
                   width: '500px', 
                   height: '500px',
                   display: 'flex',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  position: 'relative',
+                  zIndex: 10
                 }}>
                   <GlobeComponent />
                 </div>
@@ -1434,6 +1730,333 @@ export default function LandingPage() {
           }
           50% {
             opacity: 0.8;
+          }
+        }
+
+        /* Dramatic Globe Animation System */
+        
+        /* Boundary Rings */
+        @keyframes outerRing {
+          0% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
+          }
+          50% {
+            filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6));
+          }
+          100% {
+            transform: rotate(360deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
+          }
+        }
+
+        @keyframes innerRing {
+          0% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
+          }
+          50% {
+            filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
+          }
+          100% {
+            transform: rotate(360deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
+          }
+        }
+
+        /* Glow Points on Globe Surface */
+        @keyframes glowPoint1 {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+            filter: brightness(1);
+          }
+          50% {
+            transform: scale(1.4);
+            opacity: 1;
+            filter: brightness(1.5);
+          }
+        }
+
+        @keyframes glowPoint2 {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.9;
+            filter: brightness(1);
+          }
+          33% {
+            transform: scale(1.2);
+            opacity: 0.7;
+            filter: brightness(1.3);
+          }
+          66% {
+            transform: scale(1.5);
+            opacity: 1;
+            filter: brightness(1.6);
+          }
+        }
+
+        @keyframes glowPoint3 {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.7;
+            filter: brightness(1);
+          }
+          25% {
+            transform: scale(1.3);
+            opacity: 1;
+            filter: brightness(1.4);
+          }
+          75% {
+            transform: scale(1.1);
+            opacity: 0.9;
+            filter: brightness(1.2);
+          }
+        }
+
+        @keyframes glowPoint4 {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+            filter: brightness(1);
+          }
+          40% {
+            transform: scale(1.6);
+            opacity: 0.6;
+            filter: brightness(1.7);
+          }
+          80% {
+            transform: scale(1.2);
+            opacity: 1;
+            filter: brightness(1.3);
+          }
+        }
+
+        /* Collision Lines Between Glow Points */
+        @keyframes collisionLine1 {
+          0%, 20% {
+            opacity: 0;
+            transform: scaleY(0);
+          }
+          30% {
+            opacity: 0.6;
+            transform: scaleY(0.3);
+          }
+          50% {
+            opacity: 1;
+            transform: scaleY(1);
+          }
+          70% {
+            opacity: 0.8;
+            transform: scaleY(0.7);
+          }
+          100% {
+            opacity: 0;
+            transform: scaleY(0);
+          }
+        }
+
+        @keyframes collisionLine2 {
+          0%, 15% {
+            opacity: 0;
+            transform: scaleX(0);
+          }
+          25% {
+            opacity: 0.7;
+            transform: scaleX(0.4);
+          }
+          45% {
+            opacity: 1;
+            transform: scaleX(1);
+          }
+          65% {
+            opacity: 0.5;
+            transform: scaleX(0.6);
+          }
+          100% {
+            opacity: 0;
+            transform: scaleX(0);
+          }
+        }
+
+        @keyframes collisionLine3 {
+          0%, 25% {
+            opacity: 0;
+            transform: scale(0) rotate(45deg);
+          }
+          35% {
+            opacity: 0.8;
+            transform: scale(0.5) rotate(45deg);
+          }
+          55% {
+            opacity: 1;
+            transform: scale(1) rotate(45deg);
+          }
+          75% {
+            opacity: 0.4;
+            transform: scale(0.7) rotate(45deg);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0) rotate(45deg);
+          }
+        }
+
+        /* Asteroid-like Particles with Trails */
+        @keyframes asteroid1 {
+          0% {
+            transform: translateX(-600px) translateY(-200px) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(600px) translateY(200px) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes asteroid2 {
+          0% {
+            transform: translateX(600px) translateY(-150px) rotate(0deg);
+            opacity: 0;
+          }
+          15% {
+            opacity: 1;
+          }
+          85% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-600px) translateY(150px) rotate(-360deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes asteroid3 {
+          0% {
+            transform: translateX(-300px) translateY(400px) rotate(0deg);
+            opacity: 0;
+          }
+          8% {
+            opacity: 1;
+          }
+          92% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(300px) translateY(-400px) rotate(360deg);
+            opacity: 0;
+          }
+        }
+
+        @keyframes asteroid4 {
+          0% {
+            transform: translateX(400px) translateY(300px) rotate(0deg);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-400px) translateY(-300px) rotate(-360deg);
+            opacity: 0;
+          }
+        }
+
+        /* Collision Burst Effects */
+        @keyframes collisionBurst1 {
+          0%, 60% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          65% {
+            opacity: 0.8;
+            transform: scale(0.5);
+          }
+          75% {
+            opacity: 1;
+            transform: scale(1.5);
+          }
+          85% {
+            opacity: 0.6;
+            transform: scale(2);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(3);
+          }
+        }
+
+        @keyframes collisionBurst2 {
+          0%, 40% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          45% {
+            opacity: 0.9;
+            transform: scale(0.3);
+          }
+          55% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+          70% {
+            opacity: 0.4;
+            transform: scale(2.5);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(4);
+          }
+        }
+
+        @keyframes collisionBurst3 {
+          0%, 75% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          80% {
+            opacity: 0.7;
+            transform: scale(0.4);
+          }
+          90% {
+            opacity: 1;
+            transform: scale(1.8);
+          }
+          95% {
+            opacity: 0.5;
+            transform: scale(2.2);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(3.5);
+          }
+        }
+
+        /* Intense Pulsing Glow Effect */
+        @keyframes intensePulse {
+          0% {
+            transform: scale(1);
+            opacity: 0.15;
+            filter: blur(0px);
+          }
+          50% {
+            transform: scale(1.1);
+            opacity: 0.25;
+            filter: blur(2px);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0.15;
+            filter: blur(0px);
           }
         }
       `}</style>
