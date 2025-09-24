@@ -659,7 +659,8 @@ export class SocialConnectionService {
     }
   ): Promise<SocialConnection | null> {
     try {
-      const response = await fetch(`/api/users/${userId}/social-connections`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/users/${userId}/social-connections`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -688,7 +689,8 @@ export class SocialConnectionService {
   // Get social connections for user - Uses API route to avoid client-side database calls
   static async getUserSocialConnections(userId: string): Promise<SocialConnection[]> {
     try {
-      const response = await fetch(`/api/users/${userId}/social-connections`)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/users/${userId}/social-connections`)
       
       if (!response.ok) {
         console.error('❌ API error fetching social connections:', response.status)

@@ -3,10 +3,10 @@ import { getCompleteUserData } from '@/lib/blockchain/blockchain-data'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const { address } = params
+    const { address } = await params
 
     // Validate address parameter
     if (!address) {
@@ -117,7 +117,7 @@ export async function GET(
     console.error(`❌ Error fetching blockchain data:`, {
       error: error.message,
       stack: error.stack,
-      address: params?.address
+      address: (await params)?.address
     })
 
     // Return a more specific error based on the type

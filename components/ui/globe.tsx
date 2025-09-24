@@ -72,7 +72,7 @@ export function Globe({ className = '' }: { className?: string }) {
     <div 
       style={{
         width: '100%',
-        maxWidth: '600px',
+        maxWidth: '1200px',
         aspectRatio: '1',
         margin: '0 auto',
         position: 'relative'

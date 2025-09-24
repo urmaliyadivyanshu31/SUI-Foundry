@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/core/supabase'
 import { openai } from '@/lib/ai/openai'
 
 interface ChatMessage {
@@ -9,7 +8,7 @@ interface ChatMessage {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, context } = await request.json()
+    const { message, context, userContext, conversationHistory } = await request.json()
 
     if (!message) {
       return NextResponse.json(
@@ -18,110 +17,119 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = await createServerSupabaseClient()
-
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    // Use userContext provided by client instead of server-side auth
+    // This works with the zkLogin authentication system
+    if (!userContext) {
       return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
+        { success: false, error: 'User context is required' },
+        { status: 400 }
       )
     }
 
-    // Get user profile with comprehensive data
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select(`
-        *,
-        reputation_scores(*),
-        social_connections(*),
-        user_skills(*, skill:job_skills(*)),
-        job_applications(*, job:jobs(*, company:companies(*))),
-        identity_nfts(*)
-      `)
-      .eq('id', user.id)
-      .single()
+    // Build system prompt using userContext
+    let systemPrompt = `You are SuiDentity AI, an expert Web3 career coach and reputation advisor. You help developers improve their on-chain reputation, find better opportunities, and advance in blockchain careers.
 
-    if (profileError || !profile) {
-      return NextResponse.json(
-        { success: false, error: 'User profile not found' },
-        { status: 404 }
-      )
-    }
+RESPONSE STYLE - BE CASUAL AND NATURAL:
+**Visual Structure Requirements:**
+- Start with a casual greeting using their username
+- Use simple section headers WITHOUT emojis
+- Keep it conversational and friendly
+- Use bullet points for clarity but keep it natural
+- Add line breaks between sections for readability
+- End with one clear next step
 
-    // Get user's blockchain data summary
-    let blockchainSummary = {}
-    try {
-      // Import blockchain data functions
-      const { getCompleteUserData } = await import('@/lib/blockchain/blockchain-data')
-      const blockchainData = await getCompleteUserData(profile.wallet_address)
-      
-      blockchainSummary = {
-        totalTransactions: blockchainData.totalTransactions || 0,
-        totalVolume: blockchainData.totalVolume || 0,
-        totalNFTs: blockchainData.totalNFTs || 0,
-        defiProtocolsCount: blockchainData.defiProtocolsCount || 0,
-        suiBalance: blockchainData.realTimeBalance?.find(b => b.token_symbol === 'SUI')?.balance || 0,
-        tokenDiversity: blockchainData.realTimeBalance?.length || 0
+**Content Structure Template:**
+1. Start with: Hey @username!
+2. Add profile section: Your Profile Right Now
+3. Add improvement areas: Areas to Focus On  
+4. End with action: What You Should Do This Week
+
+**Tone & Language:**
+- Talk like you're giving advice to a friend
+- Be encouraging but honest
+- Use "you" and "your" naturally in conversation
+- Reference their actual numbers and data
+- Make suggestions feel doable
+- Keep it real and practical
+
+USER PROFILE:`
+
+    // Add user profile information if available
+    if (userContext.profile) {
+      systemPrompt += `
+• Username: @${userContext.profile.username || 'Anonymous'}
+• Wallet: ${userContext.profile.walletAddress || 'Not connected'}
+• Reputation: ${userContext.profile.reputationScore || 300}/850 (${userContext.profile.tier || 'Beginner'} tier)
+• GitHub: ${userContext.github ? 'Connected' : 'Not connected'}`
+
+      // Add GitHub information if available
+      if (userContext.github) {
+        systemPrompt += `
+• GitHub Profile: @${userContext.github.username} | ${userContext.github.repos} repos | ${userContext.github.followers || 0} followers`
+
+        if (userContext.github.aiAnalysis) {
+          systemPrompt += `
+• AI ANALYSIS INSIGHTS:
+  - Skills: ${userContext.github.aiAnalysis.skillsProfile?.join(', ') || 'None identified'}
+  - Languages: ${Object.keys(userContext.github.aiAnalysis.languageDistribution || {}).join(', ') || 'None'}
+  - Assessment: ${userContext.github.aiAnalysis.overallFeedback || 'No analysis available'}
+  - Recommendations: ${userContext.github.aiAnalysis.careerRecommendations?.join(' | ') || 'None'}`
+        } else {
+          systemPrompt += `
+• AI Analysis: Pending analysis - GitHub connected but code review not complete`
+        }
+      } else {
+        systemPrompt += `
+• GitHub: Not connected - recommend linking for enhanced reputation scoring`
       }
-    } catch (error) {
-      console.log('Could not fetch blockchain data:', error)
-      // Continue without blockchain data
+
+      // Add blockchain information
+      systemPrompt += `
+• Blockchain Activity: ${userContext.blockchain?.baseScore || 0}/100 points
+• Wallet Status: ${userContext.blockchain?.hasWallet ? 'Connected' : 'Not connected'}`
     }
 
-    // Prepare user context for AI
-    const userContext = {
-      username: profile.username,
-      reputationScore: profile.reputation_scores?.[0]?.total_score || 300,
-      defiScore: profile.reputation_scores?.[0]?.defi_score || 0,
-      socialScore: profile.reputation_scores?.[0]?.social_score || 0,
-      developerScore: profile.reputation_scores?.[0]?.developer_score || 0,
-      socialConnections: profile.social_connections?.length || 0,
-      connectedPlatforms: profile.social_connections?.map(sc => sc.platform) || [],
-      skills: profile.user_skills?.map(us => ({
-        name: us.skill.name,
-        category: us.skill.category,
-        proficiency: us.proficiency_level,
-        verified: us.verified
-      })) || [],
-      jobApplications: profile.job_applications?.length || 0,
-      recentApplications: profile.job_applications?.slice(0, 3).map(app => ({
-        jobTitle: app.job.title,
-        company: app.job.company.name,
-        status: app.status,
-        matchScore: app.ai_match_score
-      })) || [],
-      memberSince: profile.created_at,
-      blockchain: blockchainSummary
+    // Add conversation context
+    systemPrompt += `
+
+CONTEXT: ${context || 'General career guidance'}`
+
+    if (conversationHistory && conversationHistory.length > 0) {
+      systemPrompt += `
+CHAT HISTORY: ${conversationHistory.map(msg => `${msg.sender}: ${msg.text}`).join(' | ')}`
     }
 
-    // Create conversation context based on the current page/context
-    let systemPrompt = `You are SuiDentity AI, an intelligent career coach and reputation advisor for Web3 developers and creators. You help users improve their on-chain reputation, find better job opportunities, and advance their careers in the blockchain space.
+    // Add enhanced guidelines
+    systemPrompt += `
 
-USER PROFILE CONTEXT:
-- Username: @${userContext.username}
-- Current Reputation Score: ${userContext.reputationScore}/850
-- Breakdown: DeFi(${userContext.defiScore}), Social(${userContext.socialScore}), Developer(${userContext.developerScore})
-- Connected Platforms: ${userContext.connectedPlatforms.join(', ') || 'None'}
-- Skills: ${userContext.skills.slice(0, 8).map(s => `${s.name}(${s.proficiency})`).join(', ')}
-- Job Applications: ${userContext.jobApplications}
-- Blockchain Activity: ${userContext.blockchain.totalTransactions} transactions, ${userContext.blockchain.totalNFTs} NFTs, ${userContext.blockchain.defiProtocolsCount} DeFi protocols
+**RESPONSE FORMAT:**
+1. **ALWAYS** start with casual greeting using @username
+2. **ALWAYS** include "Your Profile Right Now" section with current status
+3. **ALWAYS** create "Areas to Focus On" section with 2-3 specific areas
+4. **ALWAYS** end with "What You Should Do This Week" with one clear next step
+5. **NEVER** use emojis in headers or content
+6. **ALWAYS** use bullet points naturally for lists
+7. **ALWAYS** include specific data from their profile (scores, languages, etc.)
+8. **ALWAYS** make it conversational and easy to read
 
-CONVERSATION CONTEXT: ${context || 'General career coaching'}
+**CRITICAL REQUIREMENTS:**
+- Keep it under 250 words but make every word count
+- Every suggestion must be specific and actionable
+- Reference their actual GitHub analysis data
+- Use their real reputation scores and blockchain activity
+- Make sections clear but without emojis
+- End with exactly ONE immediate action
+- Sound like a knowledgeable friend giving advice
+- Include specific metrics and numbers from their profile
 
-GUIDELINES:
-1. Be conversational, encouraging, and specific to their profile
-2. Always provide actionable advice based on their current stats
-3. Suggest concrete steps to improve reputation scores
-4. Recommend relevant jobs, skills to learn, or platforms to connect
-5. Use Web3/blockchain terminology naturally
-6. Keep responses under 200 words but comprehensive
-7. If they ask about jobs, consider their skills and reputation level
-8. If they ask about reputation, analyze their weak areas and suggest improvements
-9. Always end with a specific next step they can take
+**FORMATTING RULES:**
+- Double line breaks between major sections
+- Bold headers WITHOUT emojis
+- Natural bullet points for lists
+- Keep the tone conversational and friendly
+- No fancy symbols or icons
 
-BE ENCOURAGING: Frame advice positively, showing them what they can achieve.`
+BE CASUAL, FRIENDLY, AND HELPFUL - LIKE TALKING TO A FRIEND WHO KNOWS TECH.`
 
     // Adjust system prompt based on context
     if (context === 'job_search') {
@@ -145,7 +153,7 @@ BE ENCOURAGING: Frame advice positively, showing them what they can achieve.`
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
       max_tokens: 300,
@@ -154,101 +162,19 @@ BE ENCOURAGING: Frame advice positively, showing them what they can achieve.`
     const aiResponse = completion.choices[0]?.message?.content
 
     if (!aiResponse) {
-      return NextResponse.json(
-        { success: false, error: 'No response from AI' },
-        { status: 500 }
-      )
-    }
-
-    // Log the conversation (optional - for analytics)
-    try {
-      await supabase
-        .from('ai_chat_logs')
-        .insert({
-          user_id: user.id,
-          user_message: message,
-          ai_response: aiResponse,
-          context: context || 'general',
-          user_reputation_at_time: userContext.reputationScore
-        })
-    } catch (logError) {
-      // Don't fail the response if logging fails
-      console.log('Could not log chat:', logError)
+      throw new Error('No response from AI')
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        response: aiResponse,
-        context: {
-          reputation: userContext.reputationScore,
-          recommendations: generateQuickRecommendations(userContext)
-        }
-      }
+      response: aiResponse
     })
 
   } catch (error) {
     console.error('AI Chat error:', error)
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Failed to process AI request' },
       { status: 500 }
     )
   }
-}
-
-// Helper function to generate quick recommendations based on user profile
-function generateQuickRecommendations(userContext: any) {
-  const recommendations = []
-
-  // Reputation-based recommendations
-  if (userContext.reputationScore < 500) {
-    recommendations.push({
-      type: 'reputation',
-      title: 'Connect More Platforms',
-      description: 'Link GitHub and Twitter to boost your social score',
-      action: 'Go to Social Connections'
-    })
-  }
-
-  // Social connections
-  if (userContext.socialConnections < 2) {
-    recommendations.push({
-      type: 'social',
-      title: 'Boost Social Presence',
-      description: 'Connect at least 2 platforms for better job matching',
-      action: 'Add Social Accounts'
-    })
-  }
-
-  // Skills
-  if (userContext.skills.length < 3) {
-    recommendations.push({
-      type: 'skills',
-      title: 'Add Technical Skills',
-      description: 'List your programming languages and tools',
-      action: 'Update Skills Profile'
-    })
-  }
-
-  // Blockchain activity
-  if (userContext.blockchain.totalTransactions < 10) {
-    recommendations.push({
-      type: 'blockchain',
-      title: 'Increase On-chain Activity',
-      description: 'More transactions improve your DeFi reputation',
-      action: 'Explore DeFi Protocols'
-    })
-  }
-
-  // Job applications
-  if (userContext.jobApplications === 0 && userContext.reputationScore >= 400) {
-    recommendations.push({
-      type: 'career',
-      title: 'Apply to Jobs',
-      description: 'Your reputation qualifies for many positions',
-      action: 'Browse Job Board'
-    })
-  }
-
-  return recommendations.slice(0, 3) // Return top 3 recommendations
 }

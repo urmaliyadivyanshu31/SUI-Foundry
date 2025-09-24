@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { SocialConnectionService } from '@/lib/db/db-functions'
 
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID!
+const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID!
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET!
 
 interface GitHubTokenResponse {
@@ -46,11 +46,11 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('GitHub OAuth error:', error)
-      return NextResponse.redirect(new URL('/profile/setup?error=github_denied', request.url))
+      return NextResponse.redirect(new URL('/dashboard?error=github_denied', request.url))
     }
 
     if (!code || !state) {
-      return NextResponse.redirect(new URL('/profile/setup?error=invalid_callback', request.url))
+      return NextResponse.redirect(new URL('/dashboard?error=invalid_callback', request.url))
     }
 
     const cookieStore = await cookies()
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     const userId = cookieStore.get('github_auth_user_id')?.value
 
     if (!storedState || !userId || storedState !== state) {
-      return NextResponse.redirect(new URL('/profile/setup?error=invalid_state', request.url))
+      return NextResponse.redirect(new URL('/dashboard?error=invalid_state', request.url))
     }
 
     // Exchange code for access token
@@ -149,12 +149,30 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to save GitHub connection')
     }
 
+    // Automatically analyze the GitHub profile and update reputation
+    try {
+      const analyzeResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/github/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+      
+      if (analyzeResponse.ok) {
+        console.log('✅ GitHub profile analyzed and reputation updated automatically')
+      } else {
+        console.warn('⚠️ Failed to auto-analyze GitHub profile, but connection saved')
+      }
+    } catch (analyzeError) {
+      console.warn('⚠️ Auto-analysis failed:', analyzeError)
+      // Don't fail the whole connection process if analysis fails
+    }
+
     // Clean up cookies
     cookieStore.delete('github_auth_state')
     cookieStore.delete('github_auth_user_id')
 
-    // Redirect back to profile setup with success
-    return NextResponse.redirect(new URL('/profile/setup?github=connected', request.url))
+    // Redirect back to dashboard with success
+    return NextResponse.redirect(new URL('/dashboard?github=connected', request.url))
 
   } catch (error) {
     console.error('GitHub callback error:', error)
@@ -164,6 +182,6 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('github_auth_state')
     cookieStore.delete('github_auth_user_id')
     
-    return NextResponse.redirect(new URL('/profile/setup?error=github_failed', request.url))
+    return NextResponse.redirect(new URL('/dashboard?error=github_failed', request.url))
   }
 }

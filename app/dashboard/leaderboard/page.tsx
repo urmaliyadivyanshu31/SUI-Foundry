@@ -778,7 +778,7 @@ export default function LeaderboardPage() {
                 e.currentTarget.style.background = 'transparent'
               }}
             >
-              JOBS
+              TALENT
             </Link>
             
           </nav>

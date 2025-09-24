@@ -604,63 +604,75 @@ export default function QuestsPage() {
   }
 
   const walletAddress = user?.walletAddress || user?.address
+  
+  // Calculate dynamic quest progress based on real user data
+  const socialConnections = profile.social_connections || []
+  const githubConnected = socialConnections.some(sc => sc.platform === 'github')
+  const twitterConnected = socialConnections.some(sc => sc.platform === 'twitter')
+  const socialMediaProgress = (githubConnected ? 50 : 0) + (twitterConnected ? 50 : 0)
+  
+  const reputationScore = profile.reputation_scores?.[0]?.total_score || 0
+  
+  // TODO: Add blockchain transaction tracking
+  // For now, we'll use a placeholder for transaction checking
+  const hasTransactions = walletAddress ? 0 : 0 // Will be updated when blockchain data is integrated
 
   const quests = [
     {
       id: 1,
       title: "Connect Social Media",
       description: "Link your GitHub and Twitter accounts to verify your online presence",
-      progress: 67,
+      progress: socialMediaProgress,
       maxProgress: 100,
       reward: 100,
-      status: 'in_progress' as const,
+      status: (socialMediaProgress >= 100 ? 'completed' : socialMediaProgress > 0 ? 'in_progress' : 'available') as const,
       icon: null
     },
     {
       id: 2,
       title: "First Transaction",
       description: "Make your first transaction on the Sui blockchain",
-      progress: 0,
+      progress: hasTransactions,
       maxProgress: 1,
       reward: 50,
-      status: 'locked' as const,
+      status: (hasTransactions >= 1 ? 'completed' : walletAddress ? 'available' : 'locked') as const,
       icon: null
     },
     {
       id: 3,
       title: "Reputation Builder",
       description: "Achieve a reputation score above 500 points",
-      progress: profile.reputation_scores?.[0]?.total_score || 0,
+      progress: Math.min(reputationScore, 500),
       maxProgress: 500,
       reward: 200,
-      status: (profile.reputation_scores?.[0]?.total_score || 0) >= 500 ? 'completed' : 'in_progress',
+      status: (reputationScore >= 500 ? 'completed' : reputationScore > 0 ? 'in_progress' : 'available') as const,
       icon: null
     },
     {
       id: 4,
       title: "Community Member",
       description: "Join the SuiDentity Discord and introduce yourself",
-      progress: 0,
+      progress: 0, // TODO: Implement Discord integration
       maxProgress: 1,
       reward: 75,
-      status: 'locked' as const,
+      status: 'available' as const,
       icon: null
     },
     {
       id: 5,
       title: "NFT Collector",
       description: "Mint your first identity NFT",
-      progress: 0,
+      progress: 0, // TODO: Check if user has minted NFTs
       maxProgress: 1,
       reward: 150,
-      status: 'locked' as const,
+      status: (reputationScore >= 300 ? 'available' : 'locked') as const,
       icon: null
     },
     {
       id: 6,
       title: "Daily Check-in",
       description: "Log in to your dashboard 7 days in a row",
-      progress: 3,
+      progress: 1, // TODO: Implement login streak tracking
       maxProgress: 7,
       reward: 125,
       status: 'in_progress' as const,
@@ -734,7 +746,7 @@ export default function QuestsPage() {
                 e.currentTarget.style.background = 'transparent'
               }}
             >
-              JOBS
+              TALENT
             </Link>
             
           </nav>

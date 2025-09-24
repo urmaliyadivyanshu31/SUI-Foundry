@@ -370,9 +370,10 @@ export default function LandingPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '120px 60px 60px 60px',
+        padding: '80px 60px 60px 60px',
         position: 'relative',
-        minHeight: '100vh'
+        minHeight: '100vh',
+        overflow: 'hidden'
       }}>
         {/* Background Grid Network */}
         <div style={{
@@ -421,180 +422,230 @@ export default function LandingPage() {
           opacity: 0.3
         }} />
 
-        {/* Content Container */}
-        <div style={{
-          maxWidth: '1400px',
-          width: '100%',
-          position: 'relative',
-          zIndex: 10
-        }}>
+        {/* Globe positioned as semi-hemisphere from mid to bottom, left side */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.2 }}
+          style={{
+            position: 'absolute',
+            bottom: '-400px',
+            left: '7%',
+            transform: 'translateX(-50%)',
+            zIndex: 1
+          }}
+        >
+          {/* Globe Container - Extra Large semi-hemisphere */}
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 500px',
-            gap: '60px',
+            position: 'relative',
+            width: '1200px',
+            height: '1200px',
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center'
           }}>
-            {/* Left - Hero Content */}
-            <div>
-              {/* Protocol Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                style={{
-                  display: 'inline-block',
-                  background: 'rgba(147, 51, 234, 0.2)',
-                  border: '1px solid rgba(147, 51, 234, 0.3)',
-                  padding: '8px 16px',
+            
+
+            {/* Collision Burst Effects */}
+            <div style={{
+              position: 'absolute',
+              width: '1000px',
+              height: '1000px',
+              zIndex: 6,
+              pointerEvents: 'none'
+            }}>
+              {/* Burst 1 */}
+              <div style={{
+                position: 'absolute',
+                width: '50px',
+                height: '50px',
+                background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 100%)',
+                borderRadius: '50%',
+                top: '25%',
+                left: '35%',
+                animation: 'collisionBurst1 4s ease-out infinite',
+                opacity: 0
+              }} />
+              
+              {/* Burst 2 */}
+              <div style={{
+                position: 'absolute',
+                width: '45px',
+                height: '45px',
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                borderRadius: '50%',
+                top: '60%',
+                right: '25%',
+                animation: 'collisionBurst2 3.5s ease-out infinite',
+                opacity: 0
+              }} />
+              
+              {/* Burst 3 */}
+              <div style={{
+                position: 'absolute',
+                width: '40px',
+                height: '40px',
+                background: 'radial-gradient(circle, rgba(192, 132, 252, 0.8) 0%, rgba(192, 132, 252, 0.2) 50%, transparent 100%)',
+                borderRadius: '50%',
+                bottom: '30%',
+                left: '20%',
+                animation: 'collisionBurst3 5s ease-out infinite',
+                opacity: 0
+              }} />
+            </div>
+
+            {/* Intense Pulsing Glow Effect */}
+            <div style={{
+              position: 'absolute',
+              width: '1100px',
+              height: '1100px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(147, 51, 234, 0.08) 40%, rgba(192, 132, 252, 0.05) 70%, transparent 100%)',
+              animation: 'intensePulse 3s ease-in-out infinite',
+              zIndex: 0
+            }} />
+
+            <div style={{ 
+              width: '1000px', 
+              height: '1000px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 10
+            }}>
+              <GlobeComponent />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Content Container - Layered on top of globe */}
+        <div style={{
+          maxWidth: '1200px',
+          width: '100%',
+          position: 'relative',
+          zIndex: 20,
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* Protocol Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{
+              display: 'inline-block',
+              background: 'rgba(147, 51, 234, 0.2)',
+              border: '1px solid rgba(147, 51, 234, 0.3)',
+              padding: '8px 16px',
+              fontSize: '11px',
+              fontWeight: '600',
+              color: '#c084fc',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginBottom: '16px'
+            }}
+          >
+            SUIDENTITY PROTOCOL
+          </motion.div>
+
+          {/* Reputation Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            style={{
+              marginBottom: '60px'
+            }}
+          >
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <div style={{
+                position: 'relative',
+                padding: '8px 0'
+              }}>
+                {/* Left bracket */}
+                <span style={{
+                  position: 'absolute',
+                  left: '-12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'rgba(147, 51, 234, 0.6)',
+                  fontSize: '14px',
+                  fontWeight: '300'
+                }}>[</span>
+                
+                <span style={{
                   fontSize: '11px',
                   fontWeight: '600',
-                  color: '#c084fc',
+                  color: 'rgba(255, 255, 255, 0.7)',
                   letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  marginBottom: '32px'
-                }}
-              >
-                SUIDENTITY PROTOCOL
-              </motion.div>
-
-              <motion.h1 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1 }}
-                style={{
-                  fontSize: 'clamp(48px, 5vw, 72px)',
-                  fontWeight: '700',
-                  lineHeight: '1.1',
-                  marginBottom: '32px',
-                  color: '#ffffff',
-                  letterSpacing: '-0.02em',
                   textTransform: 'uppercase'
-                }}
-              >
-                AI-POWERED
-                <br />
-                IDENTITY
-                <br />
-                LAYER FOR SUI
-              </motion.h1>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-                style={{
-                  marginBottom: '48px'
-                }}
-              >
-                <div style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  marginBottom: '20px'
                 }}>
-                  <div style={{
-                    position: 'relative',
-                    padding: '8px 0'
-                  }}>
-                    {/* Left bracket */}
-                    <span style={{
-                      position: 'absolute',
-                      left: '-12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: 'rgba(147, 51, 234, 0.6)',
-                      fontSize: '14px',
-                      fontWeight: '300'
-                    }}>[</span>
-                    
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase'
-                    }}>
-                      ONCHAIN + OFFCHAIN REPUTATION AGGREGATION
-                    </span>
-                    
-                    {/* Right bracket */}
-                    <span style={{
-                      position: 'absolute',
-                      right: '-12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: 'rgba(147, 51, 234, 0.6)',
-                      fontSize: '14px',
-                      fontWeight: '300'
-                    }}>]</span>
-                  </div>
-                </div>
+                  ONCHAIN + OFFCHAIN REPUTATION AGGREGATION
+                </span>
                 
-                <div style={{
-                  fontSize: '16px',
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  lineHeight: '1.6',
-                  maxWidth: '520px'
-                }}>
-                  BUILD YOUR DECENTRALIZED IDENTITY WITH AI-POWERED REPUTATION SCORING. 
-                  CONNECT SOCIAL ACCOUNTS, VERIFY SKILLS, AND UNLOCK WEB3 OPPORTUNITIES
-                </div>
-              </motion.div>
+                {/* Right bracket */}
+                <span style={{
+                  position: 'absolute',
+                  right: '-12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'rgba(147, 51, 234, 0.6)',
+                  fontSize: '14px',
+                  fontWeight: '300'
+                }}>]</span>
+              </div>
+            </div>
+          </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                style={{
-                  display: 'flex',
-                  gap: '16px',
-                  alignItems: 'center'
-                }}
-              >
-                {isAuthenticated && user ? (
-                  <>
-                    {profile?.username ? (
-                      <button
-                        onClick={() => router.push('/dashboard')}
-                        style={{
-                          background: '#c084fc',
-                          border: 'none',
-                          borderRadius: '0px',
-                          padding: '16px 32px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: '#000',
-                          cursor: 'pointer',
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        DASHBOARD →
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => router.push('/profile/setup')}
-                        style={{
-                          background: '#c084fc',
-                          border: 'none',
-                          borderRadius: '0px',
-                          padding: '16px 32px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          color: '#000',
-                          cursor: 'pointer',
-                          letterSpacing: '0.05em',
-                          textTransform: 'uppercase',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        COMPLETE SETUP →
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <ConnectButton 
+          {/* Title - Layered on top */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            style={{
+              fontSize: 'clamp(48px, 5vw, 72px)',
+              fontWeight: '700',
+              lineHeight: '1.1',
+              marginTop: '40px',
+              marginBottom: '40px',
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              textTransform: 'uppercase',
+              textShadow: '0 0 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            AI-POWERED
+            <br />
+            IDENTITY
+            <br />
+            LAYER FOR SUI
+          </motion.h1>
+
+
+          {/* Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            style={{
+              display: 'flex',
+              gap: '16px',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {isAuthenticated && user ? (
+              <>
+                {profile?.username ? (
+                  <button
+                    onClick={() => router.push('/dashboard')}
                     style={{
                       background: '#c084fc',
                       border: 'none',
@@ -605,155 +656,71 @@ export default function LandingPage() {
                       color: '#000',
                       cursor: 'pointer',
                       letterSpacing: '0.05em',
-                      textTransform: 'uppercase'
+                      textTransform: 'uppercase',
+                      transition: 'all 0.2s ease'
                     }}
-                  />
+                  >
+                    DASHBOARD →
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.push('/profile/setup')}
+                    style={{
+                      background: '#c084fc',
+                      border: 'none',
+                      borderRadius: '0px',
+                      padding: '16px 32px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#000',
+                      cursor: 'pointer',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    COMPLETE SETUP →
+                  </button>
                 )}
-                
-                <button
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '0px',
-                    padding: '16px 32px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    cursor: 'pointer',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  📄 DOCUMENTATION
-                </button>
-              </motion.div>
-
-            </div>
-
-            {/* Right - Beautiful Globe */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.4 }}
+              </>
+            ) : (
+              <ConnectButton 
+                style={{
+                  background: '#c084fc',
+                  border: 'none',
+                  borderRadius: '0px',
+                  padding: '16px 32px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#000',
+                  cursor: 'pointer',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase'
+                }}
+              />
+            )}
+            
+            <button
               style={{
-                position: 'relative',
-                height: '500px',
+                background: 'transparent',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '0px',
+                padding: '16px 32px',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.8)',
+                cursor: 'pointer',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                transition: 'all 0.2s ease',
                 display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: '8px'
               }}
             >
-              {/* Globe Container */}
-              <div style={{
-                position: 'relative',
-                width: '700px',
-                height: '700px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginRight: '80px'
-              }}>
-                
-                {/* Outer Boundary Ring - Contains all effects */}
-                <div style={{
-                  position: 'absolute',
-                  width: '580px',
-                  height: '580px',
-                  border: '2px solid rgba(147, 51, 234, 0.4)',
-                  borderRadius: '50%',
-                  animation: 'outerRing 25s linear infinite',
-                  zIndex: 1
-                }} />
-                
-                {/* Inner Boundary Ring */}
-                <div style={{
-                  position: 'absolute',
-                  width: '540px',
-                  height: '540px',
-                  border: '1px solid rgba(192, 132, 252, 0.3)',
-                  borderRadius: '50%',
-                  animation: 'innerRing 35s linear infinite reverse',
-                  zIndex: 1
-                }} />
-
-
-                {/* Collision Burst Effects */}
-                <div style={{
-                  position: 'absolute',
-                  width: '500px',
-                  height: '500px',
-                  zIndex: 6,
-                  pointerEvents: 'none'
-                }}>
-                  {/* Burst 1 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '30px',
-                    height: '30px',
-                    background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 100%)',
-                    borderRadius: '50%',
-                    top: '25%',
-                    left: '35%',
-                    animation: 'collisionBurst1 4s ease-out infinite',
-                    opacity: 0
-                  }} />
-                  
-                  {/* Burst 2 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '25px',
-                    height: '25px',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
-                    borderRadius: '50%',
-                    top: '60%',
-                    right: '25%',
-                    animation: 'collisionBurst2 3.5s ease-out infinite',
-                    opacity: 0
-                  }} />
-                  
-                  {/* Burst 3 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '20px',
-                    height: '20px',
-                    background: 'radial-gradient(circle, rgba(192, 132, 252, 0.8) 0%, rgba(192, 132, 252, 0.2) 50%, transparent 100%)',
-                    borderRadius: '50%',
-                    bottom: '30%',
-                    left: '20%',
-                    animation: 'collisionBurst3 5s ease-out infinite',
-                    opacity: 0
-                  }} />
-                </div>
-
-                {/* Intense Pulsing Glow Effect */}
-                <div style={{
-                  position: 'absolute',
-                  width: '520px',
-                  height: '520px',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(147, 51, 234, 0.08) 40%, rgba(192, 132, 252, 0.05) 70%, transparent 100%)',
-                  animation: 'intensePulse 3s ease-in-out infinite',
-                  zIndex: 0
-                }} />
-
-                <div style={{ 
-                  width: '500px', 
-                  height: '500px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  position: 'relative',
-                  zIndex: 10
-                }}>
-                  <GlobeComponent />
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              📄 DOCUMENTATION
+            </button>
+          </motion.div>
         </div>
       </main>
 
@@ -1068,20 +1035,20 @@ export default function LandingPage() {
           }}>
             {[
               {
-                title: 'DAPP INTEGRATION',
-                description: 'One-click multichain actions, making onboarding seamless.'
+                title: 'ON-CHAIN IDENTITY VERIFICATION',
+                description: 'Secure identity verification using Sui zkLogin and blockchain attestations.'
               },
               {
-                title: 'WALLET INTEGRATION',
-                description: 'one API to access every chain and every dapp'
+                title: 'REPUTATION SCORING SYSTEM',
+                description: 'AI-powered reputation analysis based on on-chain and off-chain activity.'
               },
               {
-                title: 'AUTOMATED DEFI STRATEGIES',
-                description: 'Auto lending, staking, portfolio rebalancing.'
+                title: 'DYNAMIC IDENTITY NFTS',
+                description: 'Self-updating NFTs that reflect real-time reputation and achievements.'
               },
               {
-                title: 'SEAMLESS CROSS-CHAIN LIQUIDITY',
-                description: 'Atomic bridging and optimized swaps.'
+                title: 'SUI NETWORK INTEGRATION',
+                description: 'Native Sui blockchain features with Move smart contracts and Walrus storage.'
               }
             ].map((useCase, index) => (
               <motion.div

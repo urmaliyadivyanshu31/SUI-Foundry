@@ -256,289 +256,287 @@ const FloatingParticles = () => {
 const styles = {
   pageContainer: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 25%, #16213e 50%, #0f0f23 75%, #000000 100%)',
+    background: 'radial-gradient(ellipse at top, rgba(16, 16, 16, 0.8) 0%, rgba(0, 0, 0, 0.9) 50%, rgba(0, 0, 0, 1) 100%), linear-gradient(to bottom, #000000, #0a0a0a)',
     color: 'white',
     fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace',
-    position: 'relative' as const,
-    overflow: 'auto'
+    fontSize: '13px'
+  },
+
+  header: {
+    position: 'fixed' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '60px',
+    background: 'rgba(0, 0, 0, 0.8)',
+    backdropFilter: 'blur(20px)',
+    border: 'none',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    zIndex: 100
+  },
+
+  headerContainer: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 20px',
+    position: 'relative' as const
   },
   
-  header: {
-    position: 'relative' as const,
-    zIndex: 10,
-    padding: '2rem',
-    background: 'rgba(0, 0, 0, 0.5)',
-    backdropFilter: 'blur(20px)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-  },
-
-  nav: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '2rem'
-  },
-
-  navLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2rem'
-  },
-
   logo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#c084fc'
+    gap: '12px'
   },
-
-  navLinks: {
+  
+  navigation: {
     display: 'flex',
     alignItems: 'center',
-    gap: '2rem'
+    gap: '32px'
   },
-
+  
   navLink: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: '#9ca3af',
     textDecoration: 'none',
-    fontSize: '0.9rem',
-    fontWeight: '500',
-    transition: 'all 0.3s ease',
-    padding: '0.5rem 1rem',
-    borderRadius: '8px',
-    position: 'relative' as const,
-    border: '1px solid transparent'
-  },
-
-  navLinkActive: {
-    color: '#c084fc',
-    background: 'rgba(192, 132, 252, 0.1)',
-    border: '1px solid rgba(192, 132, 252, 0.3)'
-  },
-
-  authButton: {
-    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-    color: 'white',
-    padding: '0.75rem 2rem',
-    borderRadius: '12px',
-    textDecoration: 'none',
-    fontSize: '0.9rem',
+    fontSize: '11px',
     fontWeight: '600',
-    transition: 'all 0.3s ease',
-    border: '1px solid rgba(124, 58, 237, 0.5)',
-    position: 'relative' as const
+    padding: '8px 16px',
+    borderRadius: '0px',
+    transition: 'all 0.2s ease',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px'
+  },
+  
+  navLinkActive: {
+    color: 'white',
+    background: 'rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.2)'
   },
 
-  mainContent: {
-    position: 'relative' as const,
-    zIndex: 5,
-    padding: '2rem',
-    maxWidth: '1400px',
-    margin: '0 auto'
-  },
-
-  titleSection: {
-    textAlign: 'center' as const,
-    marginBottom: '3rem',
-    position: 'relative' as const
-  },
-
-  title: {
-    fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-    fontWeight: 'bold',
-    background: 'linear-gradient(135deg, #ffffff 0%, #c084fc 50%, #7c3aed 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    marginBottom: '1rem',
-    lineHeight: 1.2
-  },
-
-  subtitle: {
-    fontSize: '1.2rem',
-    color: 'rgba(255, 255, 255, 0.7)',
-    maxWidth: '600px',
+  mainContainer: {
+    maxWidth: '1200px',
     margin: '0 auto',
-    lineHeight: 1.6
+    padding: '120px 60px 60px 60px'
+  },
+
+  section: {
+    background: 'rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '0px',
+    padding: '32px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+    position: 'relative' as const,
+    marginBottom: '40px'
+  },
+
+  sectionTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: '24px',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.5px',
+    opacity: 0.8
   },
 
   searchSection: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '20px',
-    padding: '2rem',
-    marginBottom: '3rem',
-    position: 'relative' as const
-  },
-
-  searchGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '1.5rem',
-    alignItems: 'end'
+    gridTemplateColumns: '1fr auto',
+    gap: '16px',
+    marginBottom: '24px'
   },
 
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.5rem'
+  searchInput: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '0px',
+    padding: '12px 16px',
+    fontSize: '13px',
+    color: 'white',
+    outline: 'none',
+    transition: 'border-color 0.2s ease'
   },
 
-  label: {
-    fontSize: '0.9rem',
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '500'
-  },
-
-  input: {
-    background: 'rgba(255, 255, 255, 0.1)',
+  filterButton: {
+    background: 'rgba(255, 255, 255, 0.05)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
-    borderRadius: '12px',
-    padding: '1rem',
-    color: 'white',
-    fontSize: '1rem',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(10px)'
-  },
-
-  searchButton: {
-    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    padding: '1rem 2rem',
-    fontSize: '1rem',
+    borderRadius: '0px',
+    padding: '12px 20px',
+    fontSize: '11px',
     fontWeight: '600',
+    color: 'white',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    transition: 'all 0.2s ease',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    minHeight: '56px'
+    gap: '8px'
   },
 
   jobsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
-    gap: '2rem'
+    gap: '16px'
   },
 
   jobCard: {
-    background: 'rgba(255, 255, 255, 0.03)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    borderRadius: '20px',
-    padding: '2rem',
-    transition: 'all 0.3s ease',
+    background: 'transparent',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '0px',
+    padding: '20px',
+    transition: 'all 0.2s ease',
     position: 'relative' as const,
     cursor: 'pointer'
+  },
+
+  jobCardFeatured: {
+    border: '1px solid rgba(255, 215, 0, 0.3)',
+    background: 'rgba(255, 215, 0, 0.02)'
   },
 
   jobHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: '1.5rem'
-  },
-
-  jobInfo: {
-    flex: 1
+    marginBottom: '12px'
   },
 
   jobTitle: {
-    fontSize: '1.3rem',
-    fontWeight: 'bold',
+    fontSize: '14px',
+    fontWeight: '600',
     color: 'white',
-    marginBottom: '0.5rem'
+    marginBottom: '4px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
 
-  companyName: {
-    color: '#c084fc',
-    fontSize: '1rem',
-    marginBottom: '1rem'
+  companyInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '11px',
+    color: '#9ca3af',
+    marginBottom: '12px'
   },
 
   jobMeta: {
-    display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: '1rem',
-    marginBottom: '1rem'
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '8px',
+    marginBottom: '12px'
   },
 
   metaItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    fontSize: '0.9rem',
-    color: 'rgba(255, 255, 255, 0.7)'
+    gap: '4px',
+    fontSize: '10px',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
 
   jobDescription: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: '0.95rem',
-    lineHeight: 1.6,
-    marginBottom: '1.5rem',
+    fontSize: '11px',
+    color: '#9ca3af',
+    lineHeight: '1.4',
+    marginBottom: '12px',
     display: '-webkit-box',
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical' as const,
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
     overflow: 'hidden'
   },
 
-  jobTags: {
+  skillsTags: {
     display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: '0.5rem',
-    marginBottom: '1.5rem'
+    flexWrap: 'wrap',
+    gap: '4px',
+    marginBottom: '16px'
   },
 
-  tag: {
-    background: 'rgba(124, 58, 237, 0.2)',
+  skillTag: {
+    padding: '2px 6px',
+    background: 'rgba(147, 51, 234, 0.1)',
+    border: '1px solid rgba(147, 51, 234, 0.3)',
+    fontSize: '9px',
     color: '#c084fc',
-    padding: '0.3rem 0.8rem',
-    borderRadius: '20px',
-    fontSize: '0.8rem',
-    border: '1px solid rgba(124, 58, 237, 0.3)'
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
 
   jobFooter: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: '1rem',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+    paddingTop: '12px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)'
   },
 
   salary: {
+    fontSize: '11px',
     color: '#10b981',
-    fontSize: '1.1rem',
-    fontWeight: 'bold'
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
   },
 
   applyButton: {
-    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '10px',
-    padding: '0.75rem 1.5rem',
-    fontSize: '0.9rem',
+    background: 'rgba(147, 51, 234, 0.1)',
+    border: '1px solid rgba(147, 51, 234, 0.3)',
+    borderRadius: '0px',
+    padding: '6px 12px',
+    color: '#c084fc',
+    fontSize: '9px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '4px',
+    transition: 'all 0.2s ease'
+  },
+
+  featuredBadge: {
+    position: 'absolute' as const,
+    top: '8px',
+    right: '8px',
+    padding: '2px 6px',
+    background: 'rgba(255, 215, 0, 0.2)',
+    border: '1px solid rgba(255, 215, 0, 0.4)',
+    color: '#ffd700',
+    fontSize: '8px',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+
+  authButton: {
+    background: 'rgba(147, 51, 234, 0.1)',
+    border: '1px solid rgba(147, 51, 234, 0.3)',
+    borderRadius: '0px',
+    padding: '8px 16px',
+    color: '#c084fc',
+    fontSize: '11px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    transition: 'all 0.2s ease',
+    textDecoration: 'none'
   },
 
   createJobButton: {
     position: 'fixed' as const,
     bottom: '2rem',
     right: '2rem',
-    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-    color: 'white',
-    border: 'none',
+    background: 'rgba(147, 51, 234, 0.2)',
+    border: '1px solid rgba(147, 51, 234, 0.4)',
     borderRadius: '50%',
     width: '60px',
     height: '60px',
@@ -546,7 +544,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    boxShadow: '0 4px 20px rgba(124, 58, 237, 0.4)',
+    color: '#c084fc',
     transition: 'all 0.3s ease',
     zIndex: 1000
   },
@@ -571,8 +569,38 @@ const styles = {
 
   loadingText: {
     color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: '1.1rem',
-    fontWeight: '500',
+    fontSize: '11px',
+    fontWeight: '600',
+    letterSpacing: '0.5px',
+    textTransform: 'uppercase'
+  },
+
+  jobInfo: {
+    flex: 1
+  },
+
+  companyName: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '11px',
+    color: '#9ca3af',
+    marginTop: '4px'
+  },
+
+  jobTags: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '6px',
+    marginBottom: '16px'
+  },
+
+  tag: {
+    padding: '4px 8px',
+    background: 'rgba(147, 51, 234, 0.1)',
+    border: '1px solid rgba(147, 51, 234, 0.3)',
+    fontSize: '9px',
+    color: '#c084fc',
+    textTransform: 'uppercase',
     letterSpacing: '0.5px'
   }
 }
@@ -644,13 +672,26 @@ export default function DashboardJobsPage() {
   const fetchJobs = async () => {
     try {
       setLoading(true)
-      // For demo purposes, use hardcoded data
-      setTimeout(() => {
+      const response = await fetch('/api/jobs')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch jobs')
+      }
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setJobs(data.jobs || [])
+      } else {
+        // Fallback to hardcoded data if API fails
+        console.warn('Jobs API failed, using fallback data')
         setJobs(hardcodedJobs)
-        setLoading(false)
-      }, 500)
+      }
+      
+      setLoading(false)
     } catch (error) {
       console.error('Error fetching jobs:', error)
+      // Fallback to hardcoded data if network fails
       setJobs(hardcodedJobs)
       setLoading(false)
     }
@@ -685,123 +726,120 @@ export default function DashboardJobsPage() {
 
   return (
     <div style={styles.pageContainer}>
-      <FloatingParticles />
-      
       {/* Header */}
       <div style={styles.header}>
-        <div style={styles.nav}>
-          <div style={styles.navLeft}>
-            <Link href="/" style={styles.logo}>
-              <LogoIcon />
-              SUIDENTITY
-            </Link>
-            
-            <div style={styles.navLinks}>
-              <Link 
-                href="/dashboard" 
-                style={styles.navLink}
-              >
-                DASHBOARD
-              </Link>
-
-              <Link 
-                href="/dashboard/jobs" 
-                style={{...styles.navLink, ...styles.navLinkActive}}
-              >
-                TALENT
-              </Link>
-
-              <Link 
-                href="/dashboard/quests" 
-                style={styles.navLink}
-              >
-                QUESTS
-              </Link>
-
-              <Link 
-                href="/dashboard/leaderboard" 
-                style={styles.navLink}
-              >
-                LEADERBOARD
-              </Link>
-            </div>
-          </div>
+        <div style={styles.headerContainer}>
+          <CornerBrackets />
           
+          {/* Logo */}
+          <Link href="/" style={styles.logo}>
+            <LogoIcon />
+          </Link>
+
+          {/* Navigation Menu */}
+          <nav style={styles.navigation}>
+            <Link href="/dashboard" style={styles.navLink}>
+              DASHBOARD
+            </Link>
+            <Link href="/dashboard/leaderboard" style={styles.navLink}>
+              LEADERBOARD
+            </Link>
+            <Link href="/dashboard/quests" style={styles.navLink}>
+              QUESTS
+            </Link>
+            <Link href="/dashboard/jobs" style={{...styles.navLink, ...styles.navLinkActive}}>
+              TALENT
+            </Link>
+          </nav>
+
+          {/* Auth Section */}
           <button onClick={handleLogout} style={styles.authButton}>
-            <LogOut size={16} />
+            <LogOut size={12} />
             LOGOUT
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div style={styles.mainContent}>
-        {/* Title Section */}
-        <motion.div 
-          style={styles.titleSection}
+      <div style={styles.mainContainer}>
+        {/* Page Header */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
         >
-          <h1 style={styles.title}>TALENT MARKETPLACE</h1>
-          <p style={styles.subtitle}>
-            DISCOVER BLOCKCHAIN & WEB3 CAREERS • REPUTATION-MATCHED OPPORTUNITIES
-          </p>
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '40px'
+          }}>
+            <h1 style={{
+              fontSize: '32px',
+              fontWeight: '600',
+              color: 'white',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              TALENT MARKETPLACE
+            </h1>
+            <div style={{
+              fontSize: '14px',
+              color: '#9ca3af',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              REPUTATION-BASED WEB3 TALENT MATCHING
+            </div>
+          </div>
         </motion.div>
 
         {/* Search Section */}
-        <motion.div 
-          style={styles.searchSection}
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
+          transition={{ delay: 0.1 }}
+          style={styles.section}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+          }}
         >
-          <CornerBrackets />
+          <CornerBrackets size={16} opacity={0.3} />
           
-          <div style={styles.searchGrid}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Search Jobs</label>
-              <input
-                type="text"
-                placeholder="Job title, company, or keywords..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={styles.input}
-              />
-            </div>
-            
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Location</label>
-              <input
-                type="text"
-                placeholder="City, state, or remote"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                style={styles.input}
-              />
-            </div>
-            
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Job Type</label>
-              <select
-                value={jobType}
-                onChange={(e) => setJobType(e.target.value)}
-                style={styles.input}
-              >
-                <option value="">All Types</option>
-                <option value="full-time">Full Time</option>
-                <option value="part-time">Part Time</option>
-                <option value="contract">Contract</option>
-                <option value="freelance">Freelance</option>
-              </select>
-            </div>
-            
-            <button style={styles.searchButton}>
-              <Search size={20} />
-              Search
+          <h2 style={styles.sectionTitle}>
+            SEARCH & FILTER
+          </h2>
+          
+          <div style={styles.searchSection}>
+            <input
+              type="text"
+              placeholder="Search jobs, companies, or skills..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.searchInput}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.3)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'
+              }}
+            />
+            <button
+              type="button"
+              style={styles.filterButton}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+              }}
+            >
+              <Filter size={12} />
+              FILTER
             </button>
           </div>
-        </motion.div>
+        </motion.section>
 
         {/* Jobs Grid */}
         {loading ? (
@@ -841,35 +879,37 @@ export default function DashboardJobsPage() {
                   <div style={styles.jobInfo}>
                     <h3 style={styles.jobTitle}>{job.title}</h3>
                     <div style={styles.companyName}>
-                      <Building size={16} style={{ marginRight: '0.5rem' }} />
+                      <Building size={12} />
                       {job.company?.name}
                     </div>
                   </div>
                   
-                  <div style={{
-                    background: 'rgba(124, 58, 237, 0.2)',
-                    color: '#c084fc',
-                    padding: '0.3rem 0.8rem',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    border: '1px solid rgba(124, 58, 237, 0.3)'
-                  }}>
+                  <div style={styles.featuredBadge}>
                     FEATURED
                   </div>
                 </div>
 
+                <div style={styles.companyInfo}>
+                  <Building size={10} />
+                  <span>{job.company?.name}</span>
+                </div>
+
                 <div style={styles.jobMeta}>
                   <div style={styles.metaItem}>
-                    <MapPin size={16} />
+                    <MapPin size={10} />
                     {job.location}
                   </div>
                   <div style={styles.metaItem}>
-                    <Briefcase size={16} />
-                    {job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1).replace('-', ' ')}
+                    <Briefcase size={10} />
+                    {job.job_type.replace('-', ' ')}
                   </div>
                   <div style={styles.metaItem}>
-                    <Users size={16} />
+                    <Clock size={10} />
                     {job.experience_level}
+                  </div>
+                  <div style={styles.metaItem}>
+                    <DollarSign size={10} />
+                    ${job.salary_min?.toLocaleString()}
                   </div>
                 </div>
 
@@ -877,9 +917,9 @@ export default function DashboardJobsPage() {
                   {job.description}
                 </p>
 
-                <div style={styles.jobTags}>
+                <div style={styles.skillsTags}>
                   {job.skills?.slice(0, 4).map((skill) => (
-                    <span key={skill} style={styles.tag}>
+                    <span key={skill} style={styles.skillTag}>
                       {skill}
                     </span>
                   ))}
@@ -893,9 +933,15 @@ export default function DashboardJobsPage() {
                   <button 
                     style={styles.applyButton}
                     onClick={() => handleApplyJob(job.id)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(147, 51, 234, 0.1)'
+                    }}
                   >
-                    Apply Now
-                    <ArrowRight size={16} />
+                    APPLY
+                    <ArrowRight size={10} />
                   </button>
                 </div>
               </motion.div>

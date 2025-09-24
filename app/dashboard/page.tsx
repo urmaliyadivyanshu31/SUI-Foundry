@@ -20,7 +20,25 @@ import {
 import { motion } from 'framer-motion'
 
 // AI Chat Modal Component
-const AiChatModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+const AiChatModal = ({ 
+  isOpen, 
+  onClose, 
+  profile, 
+  walletAddress, 
+  reputationScore, 
+  githubData, 
+  githubScore, 
+  blockchainScore 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void,
+  profile: any,
+  walletAddress: string | null,
+  reputationScore: number,
+  githubData: any,
+  githubScore: number,
+  blockchainScore: number
+}) => {
   const [messages, setMessages] = useState<Array<{id: number, text: string, sender: 'user' | 'ai'}>>([
     { id: 1, text: "Hello! I'm your AI career coach. How can I help you today?", sender: 'ai' }
   ])
@@ -37,19 +55,79 @@ const AiChatModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentMessage = inputMessage
     setInputMessage('')
     setIsTyping(true)
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Prepare comprehensive user context for AI with repository analysis
+      const aiAnalysis = profile?.reputation_scores?.[0]?.ai_analysis
+      const userContext = {
+        profile: {
+          username: profile?.username,
+          walletAddress: walletAddress,
+          reputationScore: reputationScore,
+          tier: reputationScore >= 700 ? 'Expert' : reputationScore >= 500 ? 'Advanced' : reputationScore >= 300 ? 'Intermediate' : 'Beginner'
+        },
+        github: githubData ? {
+          username: githubData.login,
+          repos: githubData.public_repos,
+          followers: githubData.followers,
+          following: githubData.following,
+          gists: githubData.public_gists,
+          developerScore: githubData.developer_score,
+          company: githubData.company,
+          bio: githubData.bio,
+          joinedYear: new Date(githubData.created_at).getFullYear(),
+          // Enhanced AI analysis data
+          aiAnalysis: aiAnalysis ? {
+            skillsProfile: aiAnalysis.skillsProfile || [],
+            languageDistribution: aiAnalysis.languageDistribution || {},
+            overallFeedback: aiAnalysis.overallFeedback || '',
+            careerRecommendations: aiAnalysis.careerRecommendations || [],
+            lastAnalyzed: aiAnalysis.lastAnalyzed || null,
+            repositoryCount: aiAnalysis.repositoryCount || 0
+          } : null
+        } : null,
+        blockchain: {
+          hasWallet: !!walletAddress,
+          baseScore: blockchainScore
+        }
+      }
+
+      // Call AI API with user context
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: currentMessage,
+          userContext: userContext,
+          conversationHistory: messages.slice(-4) // Last 4 messages for context
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const aiResponse = {
+          id: Date.now() + 1,
+          text: data.response,
+          sender: 'ai' as const
+        }
+        setMessages(prev => [...prev, aiResponse])
+      } else {
+        throw new Error('AI service unavailable')
+      }
+    } catch (error) {
+      console.error('AI Chat error:', error)
       const aiResponse = {
         id: Date.now() + 1,
-        text: "Thanks for your question! I'm here to help with career guidance, skill development, and professional growth. What specific area would you like to focus on?",
+        text: "I'm experiencing technical difficulties. Please try again in a moment.",
         sender: 'ai' as const
       }
       setMessages(prev => [...prev, aiResponse])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   if (!isOpen) return null
@@ -182,9 +260,47 @@ const AiChatModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '0px',
                 fontSize: '13px',
-                color: '#9ca3af'
+                color: '#9ca3af',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                AI is typing...
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px'
+                }}>
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#9ca3af',
+                    borderRadius: '50%',
+                    animation: 'typing-dot 1.4s infinite ease-in-out',
+                    animationDelay: '0ms'
+                  }} />
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#9ca3af',
+                    borderRadius: '50%',
+                    animation: 'typing-dot 1.4s infinite ease-in-out',
+                    animationDelay: '160ms'
+                  }} />
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#9ca3af',
+                    borderRadius: '50%',
+                    animation: 'typing-dot 1.4s infinite ease-in-out',
+                    animationDelay: '320ms'
+                  }} />
+                </div>
+                <span style={{
+                  fontSize: '13px',
+                  color: '#6b7280'
+                }}>
+                  SuiDentity AI
+                </span>
               </div>
             </div>
           )}
@@ -1069,8 +1185,52 @@ const CornerBrackets = ({ size = 20, opacity = 0.3 }: { size?: number, opacity?:
 export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useZkLogin()
-  const { profile, socialConnections, isLoading: isProfileLoading } = useUserProfile()
+  const { profile, socialConnections, isLoading: isProfileLoading, refreshProfile } = useUserProfile()
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+
+  // Check for GitHub connection success and refresh data
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('github') === 'connected') {
+      // GitHub connection successful, refresh profile data
+      setTimeout(() => {
+        refreshProfile()
+        // Trigger AI analysis after profile refresh
+        setTimeout(() => {
+          triggerGitHubAnalysis()
+        }, 2000)
+      }, 1000)
+      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [refreshProfile])
+
+  // Function to trigger GitHub AI analysis
+  const triggerGitHubAnalysis = async () => {
+    if (!profile?.id) return
+    
+    try {
+      console.log('🤖 Triggering GitHub AI analysis...')
+      const response = await fetch('/api/github/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: profile.id })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ GitHub analysis completed:', result.data?.totalScore)
+        // Refresh profile to get updated reputation score
+        setTimeout(() => {
+          refreshProfile()
+        }, 1000)
+      } else {
+        console.error('❌ GitHub analysis failed:', await response.text())
+      }
+    } catch (error) {
+      console.error('❌ Failed to trigger GitHub analysis:', error)
+    }
+  }
 
   // Redirect to setup if not authenticated or no username
   useEffect(() => {
@@ -1103,7 +1263,45 @@ export default function DashboardPage() {
   }
 
   const walletAddress = user?.walletAddress || user?.address
-  const reputationScore = profile.reputation_scores?.[0]?.total_score || 300
+  
+  // Calculate AI-driven reputation score with zero initialization
+  const githubConnection = socialConnections?.find(sc => sc.platform === 'github')
+  const githubData = githubConnection?.profile_data
+  
+  // Initialize reputation to 0 (new users start at zero)
+  let reputationScore = 0
+  
+  // Calculate reputation based on GitHub connection and code quality
+  if (githubData) {
+    // If AI has analyzed their code quality, use the stored total score
+    if (profile.reputation_scores?.[0]?.total_score) {
+      // Use the AI-calculated score (300-850 range)
+      reputationScore = profile.reputation_scores[0].total_score
+    } else {
+      // Base 300 points just for connecting GitHub (minimum in 300-850 range)
+      reputationScore = 300 // Will be updated to full score after AI analysis completes
+    }
+  } else if (profile.reputation_scores?.[0]?.total_score) {
+    // Use stored score if available
+    reputationScore = profile.reputation_scores[0].total_score
+  }
+  
+  // GitHub score component - based on code quality analysis
+  let githubScore = 0
+  if (githubData) {
+    // If AI has analyzed code quality, use that score
+    if (profile.reputation_scores?.[0]?.ai_analysis && profile.reputation_scores[0].developer_score) {
+      githubScore = profile.reputation_scores[0].developer_score // AI-analyzed code quality score
+    } else {
+      // While waiting for analysis, show basic activity indicator
+      // This is NOT the real score, just a placeholder
+      const repos = Math.min(githubData.public_repos || 0, 10) // Cap influence
+      githubScore = repos * 5 // Max 50 points until AI analyzes
+    }
+  }
+  
+  // Blockchain score component (separate from GitHub) - calculated from blockchain data
+  const blockchainScore = 0 // Will be calculated from blockchain data when OnChainData component loads
 
   const socialPlatforms = [
     { 
@@ -1191,7 +1389,7 @@ export default function DashboardPage() {
                 e.currentTarget.style.background = 'transparent'
               }}
             >
-              JOBS
+              TALENT
             </Link>
           </nav>
 
@@ -1667,12 +1865,157 @@ export default function DashboardPage() {
             SOCIAL CONNECTIONS
           </h2>
           
+          {/* GitHub Connection Status */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            padding: '16px 0',
+            marginBottom: '16px'
+          }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'rgba(255, 255, 255, 0.6)'
+            }}>
+              <Github size={20} />
+            </div>
+            
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'white',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '2px',
+                fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace'
+              }}>
+                GITHUB
+              </div>
+              {socialConnections?.find(sc => sc.platform === 'github') ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '11px',
+                  fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace',
+                  letterSpacing: '0.5px'
+                }}>
+                  <span style={{ color: '#22c55e', textTransform: 'uppercase', fontWeight: '600' }}>
+                    {socialConnections.find(sc => sc.platform === 'github')?.username}
+                  </span>
+                  <span style={{ color: '#9ca3af' }}>•</span>
+                  <span style={{ color: '#9ca3af' }}>
+                    {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.public_repos || 0} REPOS
+                  </span>
+                  <span style={{ color: '#9ca3af' }}>•</span>
+                  <span style={{ color: '#9ca3af' }}>
+                    {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.followers || 0} FOLLOWERS
+                  </span>
+                  <span style={{ color: '#9ca3af' }}>•</span>
+                  <span style={{ color: '#9ca3af' }}>
+                    {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.following || 0} FOLLOWING
+                  </span>
+                  {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.public_gists && socialConnections.find(sc => sc.platform === 'github')?.profile_data?.public_gists > 0 && (
+                    <>
+                      <span style={{ color: '#9ca3af' }}>•</span>
+                      <span style={{ color: '#9ca3af' }}>
+                        {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.public_gists} GISTS
+                      </span>
+                    </>
+                  )}
+                  {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.developer_score && (
+                    <>
+                      <span style={{ color: '#9ca3af' }}>•</span>
+                      <span style={{ color: '#c084fc', fontWeight: '600' }}>
+                        DEV SCORE {socialConnections.find(sc => sc.platform === 'github')?.profile_data?.developer_score}/100
+                      </span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  fontSize: '11px',
+                  color: '#9ca3af',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace'
+                }}>
+                  NOT CONNECTED
+                </div>
+              )}
+            </div>
+            
+            {socialConnections?.some(sc => sc.platform === 'github') ? (
+              <button 
+                onClick={async () => {
+                  if (confirm('Are you sure you want to disconnect GitHub?')) {
+                    try {
+                      const response = await fetch(`/api/users/${profile.id}/social-connections?platform=github`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                      })
+                      if (response.ok) {
+                        window.location.reload()
+                      } else {
+                        console.error('Failed to disconnect GitHub')
+                      }
+                    } catch (error) {
+                      console.error('Failed to disconnect GitHub:', error)
+                    }
+                  }
+                }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '0px',
+                  padding: '6px 12px',
+                  color: '#ef4444',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace'
+                }}
+              >
+                DISCONNECT
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  window.location.href = `/api/auth/github?userId=${encodeURIComponent(profile?.id || '')}`
+                }}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(147, 51, 234, 0.3)',
+                  borderRadius: '0px',
+                  padding: '6px 12px',
+                  color: '#c084fc',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  fontFamily: 'ui-monospace, "SF Mono", Consolas, monospace'
+                }}
+              >
+                CONNECT
+              </button>
+            )}
+          </div>
+          
+          {/* Other Social Platforms */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '24px'
           }}>
-            {socialPlatforms.map((platform, index) => {
+            {socialPlatforms.filter(p => p.name !== 'GitHub').map((platform, index) => {
               const IconComponent = platform.icon
               return (
                 <div key={platform.name} style={{
@@ -1713,20 +2056,63 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   
-                  <button style={{
-                    background: 'transparent',
-                    border: platform.connected ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(147, 51, 234, 0.3)',
-                    borderRadius: '0px',
-                    padding: '6px 12px',
-                    color: platform.connected ? '#22c55e' : '#c084fc',
-                    fontSize: '10px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>
-                    {platform.connected ? 'MANAGE' : 'CONNECT'}
-                  </button>
+                  {platform.connected && platform.name === 'GitHub' ? (
+                    <button 
+                      onClick={async () => {
+                        if (confirm('Are you sure you want to disconnect GitHub?')) {
+                          try {
+                            const response = await fetch(`/api/users/${profile.id}/social-connections?platform=github`, {
+                              method: 'DELETE',
+                              headers: { 'Content-Type': 'application/json' }
+                            })
+                            if (response.ok) {
+                              window.location.reload()
+                            } else {
+                              console.error('Failed to disconnect GitHub')
+                            }
+                          } catch (error) {
+                            console.error('Failed to disconnect GitHub:', error)
+                          }
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '0px',
+                        padding: '6px 12px',
+                        color: '#ef4444',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      DISCONNECT
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        if (platform.name === 'GitHub') {
+                          connectGitHub()
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: platform.connected ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(147, 51, 234, 0.3)',
+                        borderRadius: '0px',
+                        padding: '6px 12px',
+                        color: platform.connected ? '#22c55e' : '#c084fc',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}
+                    >
+                      {platform.connected ? 'MANAGE' : 'CONNECT'}
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -1744,35 +2130,35 @@ export default function DashboardPage() {
               onClick={() => {
                 console.log('Mint profile clicked')
               }}
-              disabled={!socialConnections || socialConnections.length < 2}
+              disabled={!socialConnections || socialConnections.length < 1}
               style={{
-                background: socialConnections && socialConnections.length >= 2 
+                background: socialConnections && socialConnections.length >= 1 
                   ? 'rgba(147, 51, 234, 0.2)' 
                   : 'rgba(100, 100, 100, 0.1)',
-                border: socialConnections && socialConnections.length >= 2 
+                border: socialConnections && socialConnections.length >= 1 
                   ? '1px solid rgba(147, 51, 234, 0.4)' 
                   : '1px solid rgba(100, 100, 100, 0.2)',
                 borderRadius: '0px',
                 padding: '12px 24px',
-                color: socialConnections && socialConnections.length >= 2 
+                color: socialConnections && socialConnections.length >= 1 
                   ? '#c084fc' 
                   : '#666666',
                 fontSize: '11px',
                 fontWeight: '600',
-                cursor: socialConnections && socialConnections.length >= 2 ? 'pointer' : 'not-allowed',
+                cursor: socialConnections && socialConnections.length >= 1 ? 'pointer' : 'not-allowed',
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
                 transition: 'all 0.2s ease',
-                opacity: socialConnections && socialConnections.length >= 2 ? 1 : 0.5
+                opacity: socialConnections && socialConnections.length >= 1 ? 1 : 0.5
               }}
               onMouseEnter={(e) => {
-                if (socialConnections && socialConnections.length >= 2) {
+                if (socialConnections && socialConnections.length >= 1) {
                   e.currentTarget.style.background = 'rgba(147, 51, 234, 0.3)'
                   e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.6)'
                 }
               }}
               onMouseLeave={(e) => {
-                if (socialConnections && socialConnections.length >= 2) {
+                if (socialConnections && socialConnections.length >= 1) {
                   e.currentTarget.style.background = 'rgba(147, 51, 234, 0.2)'
                   e.currentTarget.style.borderColor = 'rgba(147, 51, 234, 0.4)'
                 }
@@ -1783,7 +2169,11 @@ export default function DashboardPage() {
             
             <button
               onClick={() => {
-                console.log('Preview portfolio clicked')
+                if (profile?.username) {
+                  window.open(`/portfolio/${profile.username}`, '_blank')
+                } else {
+                  toast.error('Profile not available. Please complete your setup first.')
+                }
               }}
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
@@ -1864,7 +2254,16 @@ export default function DashboardPage() {
       </div>
 
       {/* AI Chat Modal */}
-      <AiChatModal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />
+      <AiChatModal 
+        isOpen={isAiModalOpen} 
+        onClose={() => setIsAiModalOpen(false)}
+        profile={profile}
+        walletAddress={walletAddress}
+        reputationScore={reputationScore}
+        githubData={githubData}
+        githubScore={githubScore}
+        blockchainScore={blockchainScore}
+      />
 
       <style jsx>{`
         .social-card:hover {
