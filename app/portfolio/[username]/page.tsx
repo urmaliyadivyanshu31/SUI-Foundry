@@ -1,10 +1,10 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { usePortfolioData } from '@/hooks/usePortfolioData'
 import Head from 'next/head'
+import Link from 'next/link'
 
 export default function PortfolioPage() {
   const params = useParams()
@@ -221,7 +221,7 @@ export default function PortfolioPage() {
               </p>
             </div>
             
-            <a
+            <Link
               href="/"
               style={{
                 color: '#9ca3af',
@@ -238,7 +238,7 @@ export default function PortfolioPage() {
               }}
             >
               ← Back to Home
-            </a>
+            </Link>
           </motion.div>
 
           <div style={{
