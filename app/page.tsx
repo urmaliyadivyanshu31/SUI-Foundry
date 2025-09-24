@@ -692,133 +692,38 @@ export default function LandingPage() {
                   zIndex: 1
                 }} />
 
-                {/* Rotating Glow Points on Globe Surface - Move WITH globe rotation */}
+                {/* Vertical Rings - Simple 2 ring system like horizontal ones */}
                 <div style={{
                   position: 'absolute',
-                  width: '500px',
-                  height: '500px',
-                  zIndex: 5,
-                  pointerEvents: 'none',
-                  animation: 'globeRotation 30s linear infinite' // Same rotation as the actual globe
+                  width: '580px',
+                  height: '580px',
+                  zIndex: 2,
+                  pointerEvents: 'none'
                 }}>
-                  {/* Glow Point 1 - Moving with globe */}
+                  {/* Vertical Outer Ring */}
                   <div style={{
                     position: 'absolute',
-                    width: '12px',
-                    height: '12px',
-                    background: 'radial-gradient(circle, rgba(147, 51, 234, 1) 0%, rgba(147, 51, 234, 0.3) 70%, transparent 100%)',
+                    width: '580px',
+                    height: '580px',
+                    border: '2px solid rgba(147, 51, 234, 0.4)',
                     borderRadius: '50%',
-                    top: '20%',
-                    left: '15%',
-                    animation: 'glowPointPulse1 3s ease-in-out infinite',
-                    boxShadow: '0 0 20px rgba(147, 51, 234, 0.8), 0 0 40px rgba(147, 51, 234, 0.4)',
-                    zIndex: 10
+                    transform: 'rotateY(90deg)',
+                    animation: 'verticalOuterRing 30s linear infinite',
+                    left: '0',
+                    top: '0'
                   }} />
                   
-                  {/* Glow Point 2 - Moving with globe */}
+                  {/* Vertical Inner Ring */}
                   <div style={{
                     position: 'absolute',
-                    width: '10px',
-                    height: '10px',
-                    background: 'radial-gradient(circle, rgba(192, 132, 252, 1) 0%, rgba(192, 132, 252, 0.3) 70%, transparent 100%)',
+                    width: '540px',
+                    height: '540px',
+                    border: '1px solid rgba(192, 132, 252, 0.3)',
                     borderRadius: '50%',
-                    bottom: '25%',
-                    right: '20%',
-                    animation: 'glowPointPulse2 4s ease-in-out infinite',
-                    boxShadow: '0 0 18px rgba(192, 132, 252, 0.8), 0 0 35px rgba(192, 132, 252, 0.4)',
-                    zIndex: 10
-                  }} />
-                  
-                  {/* Glow Point 3 - Moving with globe */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '14px',
-                    height: '14px',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 70%, transparent 100%)',
-                    borderRadius: '50%',
-                    top: '40%',
-                    right: '12%',
-                    animation: 'glowPointPulse3 3.5s ease-in-out infinite',
-                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.7), 0 0 45px rgba(255, 255, 255, 0.3)',
-                    zIndex: 10
-                  }} />
-                  
-                  {/* Glow Point 4 - Moving with globe */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '11px',
-                    height: '11px',
-                    background: 'radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0.3) 70%, transparent 100%)',
-                    borderRadius: '50%',
-                    top: '60%',
-                    left: '30%',
-                    animation: 'glowPointPulse4 2.8s ease-in-out infinite',
-                    boxShadow: '0 0 22px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4)',
-                    zIndex: 10
-                  }} />
-                  
-                  {/* Glow Point 5 - Additional point */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '9px',
-                    height: '9px',
-                    background: 'radial-gradient(circle, rgba(147, 197, 253, 1) 0%, rgba(147, 197, 253, 0.3) 70%, transparent 100%)',
-                    borderRadius: '50%',
-                    top: '10%',
-                    right: '40%',
-                    animation: 'glowPointPulse1 5s ease-in-out infinite',
-                    boxShadow: '0 0 16px rgba(147, 197, 253, 0.8), 0 0 32px rgba(147, 197, 253, 0.4)',
-                    zIndex: 10
-                  }} />
-                </div>
-
-                {/* Dynamic Collision Lines - Connecting rotating points */}
-                <div style={{
-                  position: 'absolute',
-                  width: '500px',
-                  height: '500px',
-                  zIndex: 4,
-                  pointerEvents: 'none',
-                  animation: 'globeRotation 30s linear infinite' // Rotate with the globe
-                }}>
-                  {/* Dynamic Line 1 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '2px',
-                    height: '180px',
-                    background: 'linear-gradient(180deg, rgba(147, 51, 234, 0.8), rgba(147, 51, 234, 0.2), rgba(192, 132, 252, 0.8))',
-                    top: '25%',
-                    left: '20%',
-                    animation: 'collisionLineDynamic1 6s ease-in-out infinite',
-                    transformOrigin: 'center',
-                    borderRadius: '1px'
-                  }} />
-                  
-                  {/* Dynamic Line 2 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '200px',
-                    height: '2px',
-                    background: 'linear-gradient(90deg, rgba(168, 85, 247, 0.8), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8))',
-                    top: '45%',
-                    left: '15%',
-                    animation: 'collisionLineDynamic2 7s ease-in-out infinite',
-                    transformOrigin: 'center',
-                    borderRadius: '1px'
-                  }} />
-                  
-                  {/* Dynamic Line 3 */}
-                  <div style={{
-                    position: 'absolute',
-                    width: '2px',
-                    height: '150px',
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.6), rgba(147, 197, 253, 0.5), rgba(255, 255, 255, 0.6))',
-                    top: '15%',
-                    right: '35%',
-                    animation: 'collisionLineDynamic3 5s ease-in-out infinite',
-                    transform: 'rotate(25deg)',
-                    transformOrigin: 'center',
-                    borderRadius: '1px'
+                    transform: 'rotateY(90deg)',
+                    animation: 'verticalInnerRing 40s linear infinite reverse',
+                    left: '20px',
+                    top: '20px'
                   }} />
                 </div>
 
@@ -1682,151 +1587,32 @@ export default function LandingPage() {
           }
         }
 
-        /* Globe Rotation - Matches the actual Cobe globe rotation */
-        @keyframes globeRotation {
+        /* Simple Vertical Rings - Just like horizontal rings but vertical */
+        @keyframes verticalOuterRing {
           0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-
-        /* Glow Points Pulsing - Only scale and brightness, position handled by rotation */
-        @keyframes glowPointPulse1 {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.8;
-            filter: brightness(1);
+            transform: rotateY(90deg) rotateZ(0deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
           }
           50% {
-            transform: scale(1.4);
-            opacity: 1;
-            filter: brightness(1.5);
+            filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6));
+          }
+          100% {
+            transform: rotateY(90deg) rotateZ(360deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
           }
         }
 
-        @keyframes glowPointPulse2 {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.9;
-            filter: brightness(1);
-          }
-          33% {
-            transform: scale(1.2);
-            opacity: 0.7;
-            filter: brightness(1.3);
-          }
-          66% {
-            transform: scale(1.5);
-            opacity: 1;
-            filter: brightness(1.6);
-          }
-        }
-
-        @keyframes glowPointPulse3 {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.7;
-            filter: brightness(1);
-          }
-          25% {
-            transform: scale(1.3);
-            opacity: 1;
-            filter: brightness(1.4);
-          }
-          75% {
-            transform: scale(1.1);
-            opacity: 0.9;
-            filter: brightness(1.2);
-          }
-        }
-
-        @keyframes glowPointPulse4 {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.8;
-            filter: brightness(1);
-          }
-          40% {
-            transform: scale(1.6);
-            opacity: 0.6;
-            filter: brightness(1.7);
-          }
-          80% {
-            transform: scale(1.2);
-            opacity: 1;
-            filter: brightness(1.3);
-          }
-        }
-
-        /* Dynamic Collision Lines - Rotate with globe but have their own effects */
-        @keyframes collisionLineDynamic1 {
-          0%, 20% {
-            opacity: 0;
-            transform: scaleY(0);
-          }
-          30% {
-            opacity: 0.6;
-            transform: scaleY(0.3);
+        @keyframes verticalInnerRing {
+          0% {
+            transform: rotateY(90deg) rotateZ(0deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
           }
           50% {
-            opacity: 1;
-            transform: scaleY(1);
-          }
-          70% {
-            opacity: 0.8;
-            transform: scaleY(0.7);
+            filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
           }
           100% {
-            opacity: 0;
-            transform: scaleY(0);
-          }
-        }
-
-        @keyframes collisionLineDynamic2 {
-          0%, 15% {
-            opacity: 0;
-            transform: scaleX(0);
-          }
-          25% {
-            opacity: 0.7;
-            transform: scaleX(0.4);
-          }
-          45% {
-            opacity: 1;
-            transform: scaleX(1);
-          }
-          65% {
-            opacity: 0.5;
-            transform: scaleX(0.6);
-          }
-          100% {
-            opacity: 0;
-            transform: scaleX(0);
-          }
-        }
-
-        @keyframes collisionLineDynamic3 {
-          0%, 25% {
-            opacity: 0;
-            transform: scale(0) rotate(25deg);
-          }
-          35% {
-            opacity: 0.8;
-            transform: scale(0.5) rotate(25deg);
-          }
-          55% {
-            opacity: 1;
-            transform: scale(1) rotate(25deg);
-          }
-          75% {
-            opacity: 0.4;
-            transform: scale(0.7) rotate(25deg);
-          }
-          100% {
-            opacity: 0;
-            transform: scale(0) rotate(25deg);
+            transform: rotateY(90deg) rotateZ(360deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
           }
         }
 
