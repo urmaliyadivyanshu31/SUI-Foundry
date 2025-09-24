@@ -275,7 +275,7 @@ export function preloadImages(urls: string[]): Promise<void[]> {
 }
 
 // Web Worker utility for heavy computations
-export function createWorker(fn: Function): Worker {
+export function createWorker(fn: (...args: unknown[]) => unknown): Worker {
   const blob = new Blob([`(${fn.toString()})()`], { type: 'application/javascript' })
   return new Worker(URL.createObjectURL(blob))
 }

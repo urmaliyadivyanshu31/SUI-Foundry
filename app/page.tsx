@@ -213,11 +213,7 @@ export default function LandingPage() {
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#features" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/leaderboard"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -235,15 +231,11 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              FEATURES
+              LEADERBOARD
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#usecases" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('usecases')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/quests"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -261,15 +253,11 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              USE CASES
+              QUESTS
             </a>
             <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>
             <a 
-              href="#contact" 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              href="/jobs"
               style={{
                 color: 'rgba(255, 255, 255, 0.8)',
                 textDecoration: 'none',
@@ -287,7 +275,7 @@ export default function LandingPage() {
                 e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)'
               }}
             >
-              CONTACT
+              TALENT
             </a>
           </div>
 
@@ -669,12 +657,97 @@ export default function LandingPage() {
                 alignItems: 'center',
                 marginRight: '80px'
               }}>
+                
+                {/* Outer Boundary Ring - Contains all effects */}
+                <div style={{
+                  position: 'absolute',
+                  width: '580px',
+                  height: '580px',
+                  border: '2px solid rgba(147, 51, 234, 0.4)',
+                  borderRadius: '50%',
+                  animation: 'outerRing 25s linear infinite',
+                  zIndex: 1
+                }} />
+                
+                {/* Inner Boundary Ring */}
+                <div style={{
+                  position: 'absolute',
+                  width: '540px',
+                  height: '540px',
+                  border: '1px solid rgba(192, 132, 252, 0.3)',
+                  borderRadius: '50%',
+                  animation: 'innerRing 35s linear infinite reverse',
+                  zIndex: 1
+                }} />
+
+
+                {/* Collision Burst Effects */}
+                <div style={{
+                  position: 'absolute',
+                  width: '500px',
+                  height: '500px',
+                  zIndex: 6,
+                  pointerEvents: 'none'
+                }}>
+                  {/* Burst 1 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '30px',
+                    height: '30px',
+                    background: 'radial-gradient(circle, rgba(147, 51, 234, 0.8) 0%, rgba(147, 51, 234, 0.2) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '25%',
+                    left: '35%',
+                    animation: 'collisionBurst1 4s ease-out infinite',
+                    opacity: 0
+                  }} />
+                  
+                  {/* Burst 2 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '25px',
+                    height: '25px',
+                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    top: '60%',
+                    right: '25%',
+                    animation: 'collisionBurst2 3.5s ease-out infinite',
+                    opacity: 0
+                  }} />
+                  
+                  {/* Burst 3 */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '20px',
+                    height: '20px',
+                    background: 'radial-gradient(circle, rgba(192, 132, 252, 0.8) 0%, rgba(192, 132, 252, 0.2) 50%, transparent 100%)',
+                    borderRadius: '50%',
+                    bottom: '30%',
+                    left: '20%',
+                    animation: 'collisionBurst3 5s ease-out infinite',
+                    opacity: 0
+                  }} />
+                </div>
+
+                {/* Intense Pulsing Glow Effect */}
+                <div style={{
+                  position: 'absolute',
+                  width: '520px',
+                  height: '520px',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(147, 51, 234, 0.08) 40%, rgba(192, 132, 252, 0.05) 70%, transparent 100%)',
+                  animation: 'intensePulse 3s ease-in-out infinite',
+                  zIndex: 0
+                }} />
+
                 <div style={{ 
                   width: '500px', 
                   height: '500px',
                   display: 'flex',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  position: 'relative',
+                  zIndex: 10
                 }}>
                   <GlobeComponent />
                 </div>
@@ -1434,6 +1507,127 @@ export default function LandingPage() {
           }
           50% {
             opacity: 0.8;
+          }
+        }
+
+        /* Dramatic Globe Animation System */
+        
+        /* Boundary Rings */
+        @keyframes outerRing {
+          0% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
+          }
+          50% {
+            filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6));
+          }
+          100% {
+            transform: rotate(360deg);
+            filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.4));
+          }
+        }
+
+        @keyframes innerRing {
+          0% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
+          }
+          50% {
+            filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.5));
+          }
+          100% {
+            transform: rotate(360deg);
+            filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.3));
+          }
+        }
+
+
+        /* Collision Burst Effects */
+        @keyframes collisionBurst1 {
+          0%, 60% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          65% {
+            opacity: 0.8;
+            transform: scale(0.5);
+          }
+          75% {
+            opacity: 1;
+            transform: scale(1.5);
+          }
+          85% {
+            opacity: 0.6;
+            transform: scale(2);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(3);
+          }
+        }
+
+        @keyframes collisionBurst2 {
+          0%, 40% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          45% {
+            opacity: 0.9;
+            transform: scale(0.3);
+          }
+          55% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+          70% {
+            opacity: 0.4;
+            transform: scale(2.5);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(4);
+          }
+        }
+
+        @keyframes collisionBurst3 {
+          0%, 75% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          80% {
+            opacity: 0.7;
+            transform: scale(0.4);
+          }
+          90% {
+            opacity: 1;
+            transform: scale(1.8);
+          }
+          95% {
+            opacity: 0.5;
+            transform: scale(2.2);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(3.5);
+          }
+        }
+
+        /* Intense Pulsing Glow Effect */
+        @keyframes intensePulse {
+          0% {
+            transform: scale(1);
+            opacity: 0.15;
+            filter: blur(0px);
+          }
+          50% {
+            transform: scale(1.1);
+            opacity: 0.25;
+            filter: blur(2px);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0.15;
+            filter: blur(0px);
           }
         }
       `}</style>
