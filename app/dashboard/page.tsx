@@ -19,8 +19,6 @@ import {
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
-import { mintUserReputationCard } from '@/lib/blockchain/smart-contracts'
-import { useSuiWallet } from '@/hooks/useSuiWallet'
 
 // AI Chat Modal Component
 const AiChatModal = ({ 
@@ -1189,7 +1187,6 @@ export default function DashboardPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useZkLogin()
   const { profile, socialConnections, isLoading: isProfileLoading, refreshProfile } = useUserProfile()
-  const { signAndExecuteTransaction } = useSuiWallet()
   const [isAiModalOpen, setIsAiModalOpen] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
 
@@ -1237,7 +1234,7 @@ export default function DashboardPage() {
     }
   }
 
-  // Function to handle mint profile button click - Direct minting
+  // Function to handle mint profile button click - Sponsored minting
   const handleMintProfile = async () => {
     // Check prerequisites
     if (!socialConnections || socialConnections.length < 1) {
@@ -1254,54 +1251,64 @@ export default function DashboardPage() {
       return // Prevent double-clicking
     }
 
+    if (!walletAddress) {
+      toast.error('Wallet address not found')
+      return
+    }
+
     setIsMinting(true)
     
     try {
       // Show progressive toast notifications
-      toast.info('🔄 Preparing to mint your identity NFT...')
+      toast.info('Preparing to mint your identity NFT...')
       
       // Build NFT metadata from user profile
       const nftName = `${profile.username} Identity Card`
       const profileImage = profile.profile_picture || '/default-avatar.png'
       const description = `SuiDentity Reputation Card for ${profile.username}`
       
-      // Build social links from connections
-      const socialLinks: Record<string, string> = {}
-      socialConnections.forEach(connection => {
-        if (connection.platform && connection.username) {
-          socialLinks[connection.platform] = connection.username
-        }
+      toast.info('Minting your identity NFT with sponsored transaction... (v2.0)')
+      
+      // Call sponsored minting API
+      console.log('Calling sponsored minting API...')
+      const response = await fetch('/api/nft/mint-sponsored', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: nftName,
+          profileImage,
+          description,
+          userAddress: walletAddress,
+          userContext: {
+            id: profile.id,
+            wallet_address: walletAddress,
+            username: profile.username,
+            email: profile.email
+          }
+        })
       })
       
-      // Build tags from profile data
-      const tags = ['suidentity', 'reputation', profile.username]
-      if (socialConnections.find(c => c.platform === 'github')) {
-        tags.push('developer')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to mint NFT')
       }
       
-      toast.info('⚡ Minting your identity NFT...')
-      
-      // Execute the mint transaction
-      const result = await mintUserReputationCard(
-        nftName,
-        profileImage,
-        description,
-        tags,
-        socialLinks,
-        signAndExecuteTransaction
-      )
+      const result = await response.json()
       
       if (result.success) {
-        toast.success('✅ Successfully minted your identity NFT!')
+        toast.success('Successfully minted your identity NFT! Gas fees paid by admin wallet.')
+        console.log('NFT minted:', result.data)
         // Refresh profile to show new NFT
         refreshProfile()
       } else {
-        toast.error(`❌ Failed to mint NFT: ${result.error}`)
+        toast.error(`Failed to mint NFT: ${result.error || 'Unknown error'}`)
       }
       
     } catch (error) {
-      console.error('Mint error:', error)
-      toast.error('❌ Failed to mint NFT. Please try again.')
+      console.error('Sponsored mint error:', error)
+      toast.error(`Failed to mint NFT: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsMinting(false)
     }

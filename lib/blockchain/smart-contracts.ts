@@ -6,7 +6,7 @@ import { SuiObjectResponse } from '@mysten/sui/client'
 export const CONTRACT_CONFIG = {
   packageId: process.env.NEXT_PUBLIC_PACKAGE_ID || '',
   modules: {
-    reputationNft: 'reputation_nft_v2',
+    reputationNft: 'reputation_nft',
     questSystem: 'quest_system'
   }
 } as const
