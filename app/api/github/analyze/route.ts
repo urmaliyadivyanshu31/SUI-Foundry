@@ -82,8 +82,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const githubData = githubConnection.profile_data
-    const accessToken = githubData.access_token
+    const githubData = (githubConnection as any).profile_data
+    const accessToken = githubData?.access_token
 
     if (!accessToken) {
       return NextResponse.json(
@@ -384,6 +384,7 @@ async function generateUserAnalysis(repositories: RepositoryAnalysis[], githubDa
   if (totalRepos === 0) {
     return {
       totalScore: 0,
+      developerScore: 0,
       repositoryCount: 0,
       languageDistribution: {},
       skillsProfile: [],

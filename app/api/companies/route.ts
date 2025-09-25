@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         location: body.location,
         wallet_address: body.wallet_address,
         created_by: user.id
-      })
+      } as any)
       .select('*')
       .single()
 

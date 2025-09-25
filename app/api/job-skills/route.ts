@@ -38,13 +38,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Group skills by category for easier use in frontend
-    const skillsByCategory = skills?.reduce((acc, skill) => {
+    const skillsByCategory = skills?.reduce((acc: any, skill: any) => {
       if (!acc[skill.category]) {
         acc[skill.category] = []
       }
       acc[skill.category].push(skill)
       return acc
-    }, {} as Record<string, typeof skills>) || {}
+    }, {} as Record<string, any>) || {}
 
     return NextResponse.json({
       success: true,

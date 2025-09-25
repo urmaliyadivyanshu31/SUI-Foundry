@@ -45,8 +45,8 @@ export async function GET(
     }
 
     // Check authorization - user can view their own application or HR can view applications to their jobs
-    const isApplicant = application.applicant_id === user.id
-    const isCompanyOwner = application.job.company.created_by === user.id
+    const isApplicant = (application as any).applicant_id === user.id
+    const isCompanyOwner = (application as any).job.company.created_by === user.id
 
     if (!isApplicant && !isCompanyOwner) {
       return NextResponse.json(
@@ -108,7 +108,7 @@ export async function PATCH(
     }
 
     // Check if user owns the company (only HR can update applications)
-    if (application.job.company.created_by !== user.id) {
+    if ((application as any).job.company.created_by !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - only company owners can update applications' },
         { status: 403 }
@@ -146,7 +146,7 @@ export async function PATCH(
     }
 
     // Update the application
-    const { data: updatedApplication, error: updateError } = await supabase
+    const { data: updatedApplication, error: updateError } = await (supabase as any)
       .from('job_applications')
       .update(allowedUpdates)
       .eq('id', id)
@@ -218,7 +218,7 @@ export async function DELETE(
     }
 
     // Check if user owns the application
-    if (application.applicant_id !== user.id) {
+    if ((application as any).applicant_id !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - can only withdraw your own applications' },
         { status: 403 }
@@ -226,7 +226,7 @@ export async function DELETE(
     }
 
     // Prevent withdrawal if application is in final stages
-    if (['interviewed', 'hired'].includes(application.status)) {
+    if (['interviewed', 'hired'].includes((application as any).status)) {
       return NextResponse.json(
         { success: false, error: 'Cannot withdraw application in current status' },
         { status: 400 }

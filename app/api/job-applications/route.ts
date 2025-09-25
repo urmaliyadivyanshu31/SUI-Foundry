@@ -168,12 +168,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user meets minimum reputation requirement
-    const userReputation = profile.reputation_scores?.[0]?.total_score || 300
-    if (userReputation < job.min_reputation_score) {
+    const userReputation = (profile as any)?.reputation_scores?.[0]?.total_score || 300
+    if (userReputation < (job as any)?.min_reputation_score) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `Minimum reputation score of ${job.min_reputation_score} required. Your score: ${userReputation}` 
+          error: `Minimum reputation score of ${(job as any)?.min_reputation_score} required. Your score: ${userReputation}` 
         },
         { status: 400 }
       )
@@ -200,14 +200,14 @@ export async function POST(request: NextRequest) {
       .select('skill_id')
       .eq('user_id', user.id)
 
-    const userSkillIds = userSkills?.map(us => us.skill_id) || []
+    const userSkillIds = userSkills?.map((us: any) => us.skill_id) || []
     
     // Calculate skills match count
-    const requiredSkillsMatch = job.required_skills?.filter(skillId => 
+    const requiredSkillsMatch = (job as any)?.required_skills?.filter((skillId: any) => 
       userSkillIds.includes(skillId)
     ).length || 0
     
-    const preferredSkillsMatch = job.preferred_skills?.filter(skillId => 
+    const preferredSkillsMatch = (job as any)?.preferred_skills?.filter((skillId: any) => 
       userSkillIds.includes(skillId)
     ).length || 0
     
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
       .insert({
         job_id: body.job_id,
         applicant_id: user.id,
-        company_id: job.company_id,
+        company_id: (job as any).company_id,
         cover_letter: body.cover_letter,
         resume_url: body.resume_url,
         portfolio_url: body.portfolio_url,
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
         availability: body.availability,
         reputation_at_application: userReputation,
         skills_match_count: Math.round(totalSkillsMatch)
-      })
+      } as any)
       .select(`
         *,
         job:jobs(*,
@@ -251,8 +251,8 @@ export async function POST(request: NextRequest) {
 
     // Calculate AI match score using the database function
     try {
-      await supabase.rpc('calculate_job_match_score', {
-        p_application_id: application.id
+      await (supabase as any).rpc('calculate_job_match_score', {
+        p_application_id: (application as any).id
       })
     } catch (error) {
       console.error('Error calculating match score:', error)

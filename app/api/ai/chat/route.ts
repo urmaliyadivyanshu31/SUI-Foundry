@@ -96,7 +96,7 @@ CONTEXT: ${context || 'General career guidance'}`
 
     if (conversationHistory && conversationHistory.length > 0) {
       systemPrompt += `
-CHAT HISTORY: ${conversationHistory.map(msg => `${msg.sender}: ${msg.text}`).join(' | ')}`
+CHAT HISTORY: ${conversationHistory.map((msg: any) => `${msg.sender}: ${msg.text}`).join(' | ')}`
     }
 
     // Add enhanced guidelines

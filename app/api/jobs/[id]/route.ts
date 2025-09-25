@@ -42,9 +42,9 @@ export async function GET(
         .insert({
           job_id: id,
           user_id: userId,
-          ip_address: request.ip || 'unknown',
+          ip_address: request.headers.get('x-forwarded-for') || 'unknown',
           user_agent: request.headers.get('user-agent') || 'unknown'
-        })
+        } as any)
         .select()
         .single()
     }
@@ -76,7 +76,7 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        ...job,
+        ...(job as any),
         user_applied: userApplied,
         user_saved: userSaved
       }
@@ -128,7 +128,7 @@ export async function PATCH(
     }
 
     // Check if user owns the company
-    if (job.company.created_by !== user.id) {
+    if ((job as any).company.created_by !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - only company owners can update jobs' },
         { status: 403 }
@@ -159,7 +159,7 @@ export async function PATCH(
     }
 
     // Update the job
-    const { data: updatedJob, error: updateError } = await supabase
+    const { data: updatedJob, error: updateError } = await (supabase as any)
       .from('jobs')
       .update(updates)
       .eq('id', id)
@@ -230,7 +230,7 @@ export async function DELETE(
     }
 
     // Check if user owns the company
-    if (job.company.created_by !== user.id) {
+    if ((job as any).company.created_by !== user.id) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - only company owners can delete jobs' },
         { status: 403 }
