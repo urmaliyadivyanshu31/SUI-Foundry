@@ -1307,10 +1307,13 @@ export default function DashboardPage() {
     }
   }
 
-  // Placeholder function for GitHub connection
+  // GitHub connection function
   const connectGitHub = () => {
-    toast.info('GitHub connection coming soon!')
-    // TODO: Implement GitHub OAuth connection
+    if (!profile?.id) {
+      toast.error('User profile not loaded')
+      return
+    }
+    window.location.href = `/api/auth/github?userId=${encodeURIComponent(profile.id)}`
   }
 
   // Redirect to setup if not authenticated or no username
