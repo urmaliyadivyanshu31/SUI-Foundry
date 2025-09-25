@@ -4,10 +4,10 @@ import { createServerSupabaseClient } from '@/lib/core/supabase'
 // GET /api/jobs/[id] - Get specific job with details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const supabase = await createServerSupabaseClient()
 
@@ -93,10 +93,10 @@ export async function GET(
 // PATCH /api/jobs/[id] - Update job (for company owners)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     const supabase = await createServerSupabaseClient()
@@ -196,10 +196,10 @@ export async function PATCH(
 // DELETE /api/jobs/[id] - Delete job (for company owners)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const supabase = await createServerSupabaseClient()
 
