@@ -39,6 +39,15 @@ interface GitHubEmail {
 
 export async function GET(request: NextRequest) {
   try {
+    // Validate environment variables first
+    if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+      console.error('Missing GitHub OAuth credentials:', {
+        hasClientId: !!GITHUB_CLIENT_ID,
+        hasClientSecret: !!GITHUB_CLIENT_SECRET
+      })
+      throw new Error('GitHub OAuth not properly configured')
+    }
+
     const searchParams = request.nextUrl.searchParams
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -62,6 +71,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange code for access token
+    console.log('Exchanging code for token...', { 
+      client_id: GITHUB_CLIENT_ID?.substring(0, 10) + '...', 
+      hasSecret: !!GITHUB_CLIENT_SECRET,
+      codeLength: code.length 
+    })
+
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
@@ -76,7 +91,9 @@ export async function GET(request: NextRequest) {
     })
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to exchange code for token')
+      const errorText = await tokenResponse.text()
+      console.error('Token exchange failed:', { status: tokenResponse.status, error: errorText })
+      throw new Error(`Failed to exchange code for token: ${tokenResponse.status} - ${errorText}`)
     }
 
     const tokenData: GitHubTokenResponse = await tokenResponse.json()
@@ -135,6 +152,8 @@ export async function GET(request: NextRequest) {
       connected_at: new Date().toISOString()
     }
 
+    console.log('Saving GitHub connection for user:', userId)
+    
     const connection = await SocialConnectionService.upsertSocialConnection(
       userId,
       'github',
@@ -146,8 +165,11 @@ export async function GET(request: NextRequest) {
     )
 
     if (!connection) {
-      throw new Error('Failed to save GitHub connection')
+      console.error('Failed to save GitHub connection - connection is null/undefined')
+      throw new Error('Failed to save GitHub connection to database')
     }
+    
+    console.log('✅ GitHub connection saved successfully:', connection.id)
 
     // Automatically analyze the GitHub profile and update reputation
     try {
@@ -177,11 +199,24 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('GitHub callback error:', error)
     
+    // Log detailed error information
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+      url: request.url,
+      userAgent: request.headers.get('user-agent')
+    })
+    
     // Clean up cookies on error
     const cookieStore = await cookies()
     cookieStore.delete('github_auth_state')
     cookieStore.delete('github_auth_user_id')
     
-    return NextResponse.redirect(new URL('/dashboard?error=github_failed', request.url))
+    // Create detailed error message for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorParam = `github_error=${encodeURIComponent(errorMessage)}`
+    
+    return NextResponse.redirect(new URL(`/dashboard?error=github_failed&${errorParam}`, request.url))
   }
 }

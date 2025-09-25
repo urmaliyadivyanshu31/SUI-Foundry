@@ -1316,6 +1316,38 @@ export default function DashboardPage() {
     window.location.href = `/api/auth/github?userId=${encodeURIComponent(profile.id)}`
   }
 
+  // Handle GitHub OAuth errors and status updates
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const githubStatus = urlParams.get('github')
+    const error = urlParams.get('error')
+    const githubError = urlParams.get('github_error')
+
+    if (githubStatus === 'connected') {
+      toast.success('🎉 GitHub connected successfully!')
+      // Clean URL
+      const cleanUrl = window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+      // Refresh profile data
+      window.location.reload()
+    } else if (error === 'github_failed') {
+      const errorMsg = githubError ? decodeURIComponent(githubError) : 'GitHub connection failed'
+      toast.error(`❌ GitHub connection failed: ${errorMsg}`)
+      console.error('GitHub OAuth Error:', errorMsg)
+      // Clean URL
+      const cleanUrl = window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+    } else if (error === 'github_denied') {
+      toast.error('❌ GitHub connection was denied')
+      const cleanUrl = window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+    } else if (error === 'invalid_state') {
+      toast.error('❌ Security error - please try connecting again')
+      const cleanUrl = window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+    }
+  }, [])
+
   // Redirect to setup if not authenticated or no username
   useEffect(() => {
     if (!isLoading && !isProfileLoading) {
