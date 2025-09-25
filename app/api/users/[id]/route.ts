@@ -60,7 +60,7 @@ export async function GET(
       .eq('user_id', userId)
 
     const profile = {
-      ...user,
+      ...(user as any),
       social_connections: socialConnections || [],
       reputation_scores: reputationScores || [],
       identity_nfts: identityNfts || []
@@ -144,8 +144,8 @@ export async function PUT(
       updated_at: new Date().toISOString()
     }
 
-    const { data: updatedUser, error: updateError } = await supabaseAdmin
-      .from('users')
+    const { data: updatedUser, error: updateError } = await (supabaseAdmin
+      .from('users') as any)
       .update(updateData)
       .eq('id', userId)
       .select()

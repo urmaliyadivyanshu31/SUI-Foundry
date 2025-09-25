@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/core/supabase'
+import { createServerSupabaseClient, type Database } from '@/lib/core/supabase'
 import { Transaction } from '@mysten/sui/transactions'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { SuiClient } from '@mysten/sui/client'
+
+type User = Database['public']['Tables']['users']['Row']
 
 // GET /api/tips - Get tips (sent or received)
 export async function GET(request: NextRequest) {
@@ -61,8 +63,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate totals for user
-    const { data: totals } = await supabase
-      .rpc('get_user_tip_totals', { user_id: targetUserId })
+    const { data: totals } = await (supabase as any)
+      .rpc('get_user_tip_totals', { user_id: targetUserId as string })
 
     return NextResponse.json({
       success: true,
@@ -130,7 +132,7 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('id, username, wallet_address')
       .eq('id', to_user_id)
-      .single()
+      .single() as { data: Partial<User> | null, error: any }
 
     if (recipientError || !recipient) {
       return NextResponse.json(
@@ -142,9 +144,9 @@ export async function POST(request: NextRequest) {
     // Get sender wallet address
     const { data: sender, error: senderError } = await supabase
       .from('users')
-      .select('wallet_address')
+      .select('wallet_address, username')
       .eq('id', user.id)
-      .single()
+      .single() as { data: Partial<User> | null, error: any }
 
     if (senderError || !sender) {
       return NextResponse.json(
@@ -170,8 +172,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the tip record
-    const { data: tip, error: tipError } = await supabase
-      .from('tips')
+    const { data: tip, error: tipError } = await (supabase
+      .from('tips') as any)
       .insert({
         from_user_id: user.id,
         to_user_id,
@@ -197,18 +199,18 @@ export async function POST(request: NextRequest) {
 
     // Create notification for recipient
     try {
-      await supabase
-        .from('notifications')
+      await (supabase
+        .from('notifications') as any)
         .insert({
           user_id: to_user_id,
           type: 'tip_received',
           title: 'Tip Received!',
-          message: `@${sender.username || 'Anonymous'} sent you ${amount} ${token_type}${message ? `: "${message}"` : ''}`,
+          message: `@${sender?.username || 'Anonymous'} sent you ${amount} ${token_type}${message ? `: "${message}"` : ''}`,
           data: {
-            tip_id: tip.id,
+            tip_id: (tip as any).id,
             amount,
             token_type,
-            from_username: sender.username
+            from_username: sender?.username
           }
         })
     } catch (notificationError) {

@@ -30,6 +30,13 @@ export type Database = {
           wallet_address: string
           username: string | null
           email: string | null
+          profile_picture: string | null
+          zklogin_sub: string | null
+          oauth_provider: string | null
+          salt_value: string | null
+          max_epoch: number | null
+          ephemeral_public_key: string | null
+          jwt_token: string | null
           created_at: string
           updated_at: string
         }
@@ -38,6 +45,13 @@ export type Database = {
           wallet_address: string
           username?: string | null
           email?: string | null
+          profile_picture?: string | null
+          zklogin_sub?: string | null
+          oauth_provider?: string | null
+          salt_value?: string | null
+          max_epoch?: number | null
+          ephemeral_public_key?: string | null
+          jwt_token?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -46,6 +60,13 @@ export type Database = {
           wallet_address?: string
           username?: string | null
           email?: string | null
+          profile_picture?: string | null
+          zklogin_sub?: string | null
+          oauth_provider?: string | null
+          salt_value?: string | null
+          max_epoch?: number | null
+          ephemeral_public_key?: string | null
+          jwt_token?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -288,12 +309,154 @@ export type Database = {
           created_at?: string
         }
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data: any | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          data?: any | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string
+          data?: any | null
+          read?: boolean
+          created_at?: string
+        }
+      }
+      user_nfts: {
+        Row: {
+          id: string
+          user_id: string
+          object_id: string
+          collection_name: string | null
+          nft_name: string | null
+          description: string | null
+          image_url: string | null
+          creator_address: string | null
+          owner_address: string
+          nft_type: string | null
+          attributes: any | null
+          metadata_uri: string | null
+          last_updated: string
+          is_owned: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          object_id: string
+          collection_name?: string | null
+          nft_name?: string | null
+          description?: string | null
+          image_url?: string | null
+          creator_address?: string | null
+          owner_address: string
+          nft_type?: string | null
+          attributes?: any | null
+          metadata_uri?: string | null
+          last_updated?: string
+          is_owned?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          object_id?: string
+          collection_name?: string | null
+          nft_name?: string | null
+          description?: string | null
+          image_url?: string | null
+          creator_address?: string | null
+          owner_address?: string
+          nft_type?: string | null
+          attributes?: any | null
+          metadata_uri?: string | null
+          last_updated?: string
+          is_owned?: boolean
+          created_at?: string
+        }
+      }
+      defi_interactions: {
+        Row: {
+          id: string
+          user_id: string
+          protocol_name: string
+          protocol_address: string
+          interaction_type: string
+          transaction_hash: string
+          amount: number | null
+          token_symbol: string | null
+          gas_used: number | null
+          block_number: number | null
+          timestamp: string
+          success: boolean
+          indexed_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          protocol_name: string
+          protocol_address: string
+          interaction_type: string
+          transaction_hash: string
+          amount?: number | null
+          token_symbol?: string | null
+          gas_used?: number | null
+          block_number?: number | null
+          timestamp: string
+          success?: boolean
+          indexed_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          protocol_name?: string
+          protocol_address?: string
+          interaction_type?: string
+          transaction_hash?: string
+          amount?: number | null
+          token_symbol?: string | null
+          gas_used?: number | null
+          block_number?: number | null
+          timestamp?: string
+          success?: boolean
+          indexed_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_tip_totals: {
+        Args: {
+          user_id: string
+        }
+        Returns: Array<{
+          total_sent: number
+          total_received: number
+          tips_sent_count: number
+          tips_received_count: number
+        }>
+      }
     }
     Enums: {
       [_ in never]: never

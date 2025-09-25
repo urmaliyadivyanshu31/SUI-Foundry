@@ -552,7 +552,7 @@ export class UserService {
   // Get user by wallet address
   static async getUserByWalletAddress(walletAddress: string): Promise<User | null> {
     try {
-      const { data: user, error } = await supabase
+      const { data: user, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('wallet_address', walletAddress)
@@ -585,7 +585,7 @@ export class UserService {
         return false
       }
 
-      const { error } = await (supabase
+      const { error } = await (supabaseAdmin
         .from('identity_nfts') as any)
         .insert({
           user_id: userId,
@@ -621,7 +621,7 @@ export class UserService {
         return []
       }
 
-      const { data: nfts, error } = await supabase
+      const { data: nfts, error } = await supabaseAdmin
         .from('identity_nfts')
         .select('*')
         .eq('user_id', userId)
@@ -780,7 +780,7 @@ export class ReputationService {
         calculated_at: new Date().toISOString(),
         version: 1
       }
-      const { data: reputation, error } = await (supabase
+      const { data: reputation, error } = await (supabaseAdmin
         .from('reputation_scores') as any)
         .upsert(upsertData, {
           onConflict: 'user_id'
@@ -803,7 +803,7 @@ export class ReputationService {
   // Get latest reputation score for user
   static async getUserReputationScore(userId: string): Promise<ReputationScore | null> {
     try {
-      const { data: reputation, error } = await supabase
+      const { data: reputation, error } = await supabaseAdmin
         .from('reputation_scores')
         .select('*')
         .eq('user_id', userId)
@@ -841,7 +841,7 @@ export class DatabaseManager {
 
   static async getUserById(userId: string): Promise<User | null> {
     try {
-      const { data: user, error } = await supabase
+      const { data: user, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('id', userId)
@@ -899,7 +899,7 @@ export class DatabaseManager {
         return false
       }
 
-      const { error } = await (supabase
+      const { error } = await (supabaseAdmin
         .from('identity_nfts') as any)
         .update(updates)
         .eq('user_id', userId)

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/core/supabase'
+import { supabaseAdmin, type Database } from '@/lib/core/supabase'
 import { getCompleteUserData } from '@/lib/blockchain/blockchain-data'
+
+type User = Database['public']['Tables']['users']['Row']
+type SocialConnection = Database['public']['Tables']['social_connections']['Row']
+type ReputationScore = Database['public']['Tables']['reputation_scores']['Row']
 
 export async function GET(
   request: NextRequest,
@@ -23,7 +27,7 @@ export async function GET(
       .from('users')
       .select('*')
       .eq('username', username)
-      .single()
+      .single() as { data: User | null, error: any }
 
     if (userError || !user) {
       return NextResponse.json(
@@ -36,17 +40,17 @@ export async function GET(
     const { data: socialConnections } = await supabase
       .from('social_connections')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id) as { data: SocialConnection[] | null }
 
     // Get user's reputation score
     const { data: reputation } = await supabase
       .from('reputation_scores')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .single() as { data: ReputationScore | null, error: any }
 
     // Get user's GitHub data for repositories
-    const githubConnection = socialConnections?.find(conn => conn.platform === 'github')
+    const githubConnection = socialConnections?.find((conn) => conn.platform === 'github')
     let repositories = []
     let githubStats = null
 
@@ -54,7 +58,7 @@ export async function GET(
       try {
         // Fetch repositories from GitHub
         const reposResponse = await fetch(
-          `https://api.github.com/users/${githubConnection.profile_data.login}/repos?type=owner&sort=stars&per_page=3`,
+          `https://api.github.com/users/${(githubConnection.profile_data as any).login}/repos?type=owner&sort=stars&per_page=3`,
           {
             headers: {
               'Accept': 'application/vnd.github.v3+json',
@@ -68,7 +72,7 @@ export async function GET(
 
         // Get GitHub user stats
         const userResponse = await fetch(
-          `https://api.github.com/users/${githubConnection.profile_data.login}`,
+          `https://api.github.com/users/${(githubConnection.profile_data as any).login}`,
           {
             headers: {
               'Accept': 'application/vnd.github.v3+json',
@@ -86,7 +90,7 @@ export async function GET(
 
     // Get blockchain data (NFTs and balances)
     let blockchainData = null
-    let nfts = []
+    let nfts: any[] = []
 
     if (user.wallet_address) {
       try {
@@ -98,12 +102,12 @@ export async function GET(
     }
 
     // Get tip statistics
-    const { data: tipStats } = await supabase
-      .rpc('get_user_tip_totals', { user_id: user.id })
+    const { data: tipStats } = await (supabase as any)
+      .rpc('get_user_tip_totals', { user_id: (user as any).id })
 
     const portfolioData = {
       user: {
-        id: user.id,
+        id: (user as any).id,
         username: user.username,
         profile_picture: user.profile_picture,
         wallet_address: user.wallet_address,
@@ -117,7 +121,7 @@ export async function GET(
         defi_score: 0,
         ai_analysis: null
       },
-      repositories: repositories.map(repo => ({
+      repositories: repositories.map((repo: any) => ({
         id: repo.id,
         name: repo.name,
         full_name: repo.full_name,
@@ -191,7 +195,7 @@ export async function POST(
       .from('users')
       .select('id, username, wallet_address')
       .eq('username', username)
-      .single()
+      .single() as { data: Partial<User> | null, error: any }
 
     if (recipientError || !recipient) {
       return NextResponse.json(
@@ -202,11 +206,11 @@ export async function POST(
 
     // For now, we'll create an anonymous tip record
     // In a full implementation, you'd want to authenticate the sender
-    const { data: tip, error: tipError } = await supabase
-      .from('tips')
+    const { data: tip, error: tipError } = await (supabase
+      .from('tips') as any)
       .insert({
         from_user_id: null, // Anonymous tip
-        to_user_id: recipient.id,
+        to_user_id: recipient.id!,
         amount,
         token_type: 'SUI',
         transaction_hash,

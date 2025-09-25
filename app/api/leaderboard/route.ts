@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
 
     // Sort users by reputation score
     const sortedUsers = usersWithScores.sort((a, b) => {
-      const aScore = a.reputation_scores?.[0]?.total_score || 300
-      const bScore = b.reputation_scores?.[0]?.total_score || 300
+      const aScore = (a as any).reputation_scores?.[0]?.total_score || 300
+      const bScore = (b as any).reputation_scores?.[0]?.total_score || 300
       return bScore - aScore
     })
 
@@ -86,22 +86,22 @@ export async function GET(request: NextRequest) {
         const { count: socialCount } = await supabase
           .from('social_connections')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
+          .eq('user_id', (user as any).id)
           .eq('verified', true)
 
         // Get tips data
         const { data: tipsSent } = await supabase
           .from('tips')
           .select('amount')
-          .eq('from_user_id', user.id)
+          .eq('from_user_id', (user as any).id)
 
         const { data: tipsReceived } = await supabase
           .from('tips')
           .select('amount')
-          .eq('to_user_id', user.id)
+          .eq('to_user_id', (user as any).id)
 
         return {
-          ...user,
+          ...(user as any),
           social_connections: socialCount || 0,
           tips_sent: tipsSent || [],
           tips_received: tipsReceived || []
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
       const totalTipsReceived = user.tips_received?.reduce((sum: number, tip: any) => sum + (tip.amount || 0), 0) || 0
 
       return {
-        id: user.id,
+        id: (user as any).id,
         username: user.username || 'Anonymous',
         wallet_address: user.wallet_address,
         profile_picture: user.profile_picture,
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     
     if (user) {
       // Find user's rank in the sorted list
-      const userIndex = sortedUsers.findIndex(u => u.id === user.id)
+      const userIndex = sortedUsers.findIndex(u => (u as any).id === (user as any).id)
       if (userIndex !== -1) {
         currentUserRank = userIndex + 1
       }
@@ -172,10 +172,10 @@ export async function GET(request: NextRequest) {
       total_users: count || 0,
       total_reputation_calculated: sortedUsers.length,
       average_score: Math.round(
-        sortedUsers.reduce((sum, u) => sum + (u.reputation_scores?.[0]?.total_score || 300), 0) / 
+        sortedUsers.reduce((sum, u) => sum + ((u as any).reputation_scores?.[0]?.total_score || 300), 0) / 
         Math.max(sortedUsers.length, 1)
       ),
-      top_score: sortedUsers[0]?.reputation_scores?.[0]?.total_score || 300
+      top_score: (sortedUsers[0] as any)?.reputation_scores?.[0]?.total_score || 300
     }
 
     return NextResponse.json({

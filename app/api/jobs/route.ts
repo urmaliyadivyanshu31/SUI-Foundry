@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
+    const supabase = await createServerSupabaseClient()
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         equity_offered: body.equity_offered,
         crypto_payment: body.crypto_payment,
         sui_payment: body.sui_payment
-      })
+      } as any)
       .select(`
         *,
         company:companies(*),

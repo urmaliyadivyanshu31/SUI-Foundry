@@ -238,7 +238,7 @@ export async function DELETE(
     }
 
     // Soft delete - just mark as inactive
-    const { data: deletedJob, error: deleteError } = await supabase
+    const { data: deletedJob, error: deleteError } = await (supabase as any)
       .from('jobs')
       .update({ is_active: false })
       .eq('id', id)
