@@ -422,7 +422,7 @@ export default function LandingPage() {
           opacity: 0.3
         }} />
 
-        {/* Globe positioned as semi-hemisphere from mid to bottom, left side */}
+        {/* Globe positioned as semi-hemisphere from mid to bottom, centered */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -430,9 +430,13 @@ export default function LandingPage() {
           style={{
             position: 'absolute',
             bottom: '-400px',
-            left: '7%',
-            transform: 'translateX(-50%)',
-            zIndex: 1
+            left: 0,
+            right: 0,
+            zIndex: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%'
           }}
         >
           {/* Globe Container - Extra Large semi-hemisphere */}
@@ -528,7 +532,8 @@ export default function LandingPage() {
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          marginTop: '100px'
         }}>
           {/* Protocol Badge */}
           <motion.div
